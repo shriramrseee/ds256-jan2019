@@ -51,10 +51,11 @@ public class FreqTag {
     }
 
     private static Integer getHashCount(JSONObject x) {
+
         try {
             return ((JSONArray)((JSONObject) x.get("entities")).get("hashtags")).size();
         }
-        finally {
+        catch(Exception e) {
             return 0;
         }
 

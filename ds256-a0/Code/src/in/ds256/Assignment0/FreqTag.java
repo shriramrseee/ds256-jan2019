@@ -10,7 +10,7 @@ import org.apache.spark.api.java.JavaRDD;
  * DS-256 Assignment 0
  * Code for generating frequency distribution per hashtag
  */
-public class FreqTag​ {
+public class FreqTag {
 
     public static void main(String[] args) throws IOException {
 

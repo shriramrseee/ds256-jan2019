@@ -5,6 +5,10 @@ import java.io.IOException;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.function.Function;
+import org.json.simple.JSONArray;
+import org.json.simple.parser.*;
+import org.json.simple.JSONObject;
 
 /**
  * DS-256 Assignment 0
@@ -25,10 +29,24 @@ public class FreqTag {
          */
 
         // Open file
-        JavaRDD<String> textFile = sc.textFile(inputFile);
+        JavaRDD<String> twitterData = sc.textFile(inputFile);
+
+        System.out.println("Shriram: File Opened !");
+
+        // Convert to json
+        JavaRDD<JSONObject> parsedData = twitterData.map((Function<String, JSONObject>) x -> (JSONObject) new JSONParser().parse(x));
+
+        System.out.println("Shriram: Parsed JSON !");
+
+        // Get Hash Count
+        JavaRDD<Integer> hashCount = parsedData.map((Function<JSONObject, Integer>) x -> ((JSONArray)((JSONObject) x.get("entities")).get("hashtags")).size());
+
+        System.out.println("Shriram: Obtained Count !");
 
         // Save file
-        textFile.saveAsTextFile(outputFile);
+        hashCount.saveAsTextFile(outputFile);
+
+        System.out.println("Shriram: Saved Output !");
 
         sc.stop();
         sc.close();

@@ -1,7 +1,5 @@
 package in.ds256.Assignment0;
 
-import java.io.IOException;
-
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.JavaRDD;
@@ -16,7 +14,7 @@ import org.json.simple.JSONObject;
  */
 public class FreqTag {
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
 
         String inputFile = args[0]; // Should be some file on HDFS
         String outputFile = args[1]; // Should be some file on HDFS
@@ -39,7 +37,7 @@ public class FreqTag {
         System.out.println("Shriram: Parsed JSON !");
 
         // Get Hash Count
-        JavaRDD<Integer> hashCount = parsedData.map((Function<JSONObject, Integer>) x -> ((JSONArray)((JSONObject) x.get("entities")).get("hashtags")).size());
+        JavaRDD<Integer> hashCount = parsedData.map((Function<JSONObject, Integer>) FreqTag::getHashCount);
 
         System.out.println("Shriram: Obtained Count !");
 
@@ -50,6 +48,16 @@ public class FreqTag {
 
         sc.stop();
         sc.close();
+    }
+
+    private static Integer getHashCount(JSONObject x) {
+        try {
+            return ((JSONArray)((JSONObject) x.get("entities")).get("hashtags")).size();
+        }
+        finally {
+            return 0;
+        }
+
     }
 
 }

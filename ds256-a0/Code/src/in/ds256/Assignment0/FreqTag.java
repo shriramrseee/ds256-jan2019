@@ -1,6 +1,7 @@
 package in.ds256.Assignment0;
 
 import org.apache.spark.SparkConf;
+import org.apache.spark.api.java.JavaDoubleRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaPairRDD;
@@ -60,14 +61,20 @@ public class FreqTag {
 
         // Get average per user
 
-        JavaPairRDD<Integer, Tuple2> avgPerUser = validHashCount.reduceByKey((x, y) -> new Tuple2<>((Integer) x._1+ (Integer) y._1, (Integer) x._2 + (Integer)y._2));
+        JavaRDD<Double> avgPerUser = validHashCount.
+                reduceByKey((x, y) -> new Tuple2<>((Integer) x._1 + (Integer) y._1, (Integer) x._2 + (Integer) y._2)).
+                map(x -> (Double) x._2._1 / (Double) x._2._2);
 
         System.out.println("Shriram: Obtained Avg. value !");
 
-        // Save file
-        avgPerUser.saveAsTextFile(outputFile);
+        // Get Histogram
 
-        System.out.println("Shriram: Saved Output !");
+        JavaDoubleRDD avgPerUserD = avgPerUser.mapToDouble(x -> x);
+        Tuple2<double[], long[]>  histogram = avgPerUserD.histogram(10);
+
+        // Save file
+
+        System.out.println(histogram.toString());
 
         sc.stop();
         sc.close();

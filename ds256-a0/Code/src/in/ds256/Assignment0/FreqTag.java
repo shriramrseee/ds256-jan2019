@@ -40,40 +40,40 @@ public class FreqTag {
         System.out.println("Shriram: Parsed JSON !");
 
         // Get Hash Count for each tweet
-        JavaPairRDD<Integer, Integer> hashCount = parsedData.mapToPair(
-                (PairFunction<JSONObject, Integer, Integer>) x -> {
+        JavaPairRDD<Integer, Tuple2> hashCount = parsedData.mapToPair(
+                (PairFunction<JSONObject, Integer, Tuple2>) x -> {
                     try {
-                        return new Tuple2(((JSONObject) x.get("user")).get("id"),
-                                ((JSONArray) ((JSONObject) x.get("entities")).get("hashtags")).size());
+                        return new Tuple2(((JSONObject) x.get("user")).get("id"), new Tuple2(
+                                ((JSONArray) ((JSONObject) x.get("entities")).get("hashtags")).size(), 1));
                     } catch (Exception e) {
-                        return new Tuple2(0, -1);
+                        return new Tuple2(0, new Tuple2(-1, 1));
                     }
                 });
 
         System.out.println("Shriram: Obtained Count !");
 
         // Filter invalid rows
-        JavaPairRDD<Integer, Integer> validHashCount = hashCount.filter(x -> !(x._2.equals(-1)));
+        JavaPairRDD<Integer, Tuple2> validHashCount = hashCount.filter(x -> !(x._2._1.equals(-1)));
 
         System.out.println("Shriram: Filtered value !");
 
         // Get average per user
 
-        JavaPairRDD<Integer, Double> avgPerUser = validHashCount.groupByKey().mapToPair(x -> {
-            Integer c = 0;
-            Double s = 0.0;
-            while (x._2.iterator().hasNext()) {
-                c++;
-                s += x._2.iterator().next();
-            }
-            return new Tuple2(x._1, s/c);
-        });
+//        JavaPairRDD<Integer, Double> avgPerUser = validHashCount.groupByKey().mapToPair(x -> {
+//            Integer c = 0;
+//            Double s = 0.0;
+//            while (x._2.iterator().hasNext()) {
+//                c++;
+//                s += x._2.iterator().next();
+//            }
+//            return new Tuple2(x._1, s/c);
+//        });
 
 
         System.out.println("Shriram: Obtained Avg. value !");
 
         // Save file
-        avgPerUser.saveAsTextFile(outputFile);
+        validHashCount.saveAsTextFile(outputFile);
 
         System.out.println("Shriram: Saved Output !");
 

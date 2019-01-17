@@ -3,10 +3,13 @@ package in.ds256.Assignment0;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.function.Function;
+import org.apache.spark.api.java.function.PairFunction;
 import org.json.simple.JSONArray;
 import org.json.simple.parser.*;
 import org.json.simple.JSONObject;
+import scala.Tuple2;
 
 /**
  * DS-256 Assignment 0
@@ -31,18 +34,46 @@ public class FreqTag {
 
         System.out.println("Shriram: File Opened !");
 
-//        // Convert to json
-//        JavaRDD<JSONObject> parsedData = twitterData.map((Function<String, JSONObject>) x -> (JSONObject) new JSONParser().parse(x));
-//
-//        System.out.println("Shriram: Parsed JSON !");
+        // Convert to json
+        JavaRDD<JSONObject> parsedData = twitterData.map((Function<String, JSONObject>) x -> (JSONObject) new JSONParser().parse(x));
 
-        // Get Hash Count
-        JavaRDD<Integer> hashCount = twitterData.map((Function<String, Integer>) FreqTag::getHashCount);
+        System.out.println("Shriram: Parsed JSON !");
+
+        // Get Hash Count for each tweet
+        JavaPairRDD<Integer, Integer> hashCount = parsedData.mapToPair(
+                (PairFunction<JSONObject, Integer, Integer>) x -> {
+                    try {
+                        return new Tuple2(((JSONObject) x.get("user")).get("id"),
+                                ((JSONArray) ((JSONObject) x.get("entities")).get("hashtags")).size());
+                    } catch (Exception e) {
+                        return new Tuple2(0, -1);
+                    }
+                });
 
         System.out.println("Shriram: Obtained Count !");
 
+        // Filter invalid rows
+        JavaPairRDD<Integer, Integer> validHashCount = hashCount.filter(x -> !(x._2.equals(-1)));
+
+        System.out.println("Shriram: Filtered value !");
+
+        // Get average per user
+
+        JavaPairRDD<Integer, Double> avgPerUser = validHashCount.groupByKey().mapToPair(x -> {
+            Integer c = 0;
+            Double s = 0.0;
+            while (x._2.iterator().hasNext()) {
+                c++;
+                s += x._2.iterator().next();
+            }
+            return new Tuple2(x._1, s/c);
+        });
+
+
+        System.out.println("Shriram: Obtained Avg. value !");
+
         // Save file
-        hashCount.saveAsTextFile(outputFile);
+        avgPerUser.saveAsTextFile(outputFile);
 
         System.out.println("Shriram: Saved Output !");
 
@@ -78,15 +109,15 @@ public class FreqTag {
 
     }
 
-    private static Integer getHashCount(String x) {
-
-        try {
-            return ((JSONArray)((JSONObject) ((JSONObject) new JSONParser().parse(x)).get("entities")).get("hashtags")).size();
-        }
-        catch(Exception e) {
-            return 5;
-        }
-
-    }
+//    private static Tuple2<Integer, Integer> getHashCount(JSONObject x) {
+//
+//        try {
+//            return ((JSONArray)((JSONObject) x.get("entities")).get("hashtags")).size();
+//        }
+//        catch(Exception e) {
+//            return 0;
+//        }
+//
+//    }
 
 }

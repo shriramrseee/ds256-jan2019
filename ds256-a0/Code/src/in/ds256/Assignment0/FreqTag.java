@@ -44,21 +44,21 @@ public class FreqTag {
 
         // Open file
         JavaRDD<String> twitterData = sc.textFile(inputFile);
-        System.out.println("Shriram: File Opened !");
+        System.out.println("Program_Log: File Opened !");
 
         // Get Hash Count for each tweet
         JavaPairRDD<Long, Tuple2> hashCount = twitterData.flatMapToPair((PairFlatMapFunction<String, Long, Tuple2>) FreqTag::getHashCount);
-        System.out.println("Shriram: Obtained Count !");
+        System.out.println("Program_Log: Obtained Count !");
 
         // Get average per user
 
         JavaRDD<Double> avgPerUser = hashCount.reduceByKey((x, y) -> new Tuple2<>((Integer) x._1 + (Integer) y._1, (Integer) x._2 + (Integer) y._2)).map(x -> ((Integer) x._2._1).doubleValue() / ((Integer) x._2._2).doubleValue());
-        System.out.println("Shriram: Obtained Avg. value !");
+        System.out.println("Program_Log: Obtained Avg. value !");
 
         // Get Histogram
 
         JavaDoubleRDD avgPerUserD = avgPerUser.mapToDouble(x -> x);
-        Tuple2<double[], long[]> histogram = avgPerUserD.histogram(10);
+        Tuple2<double[], long[]> histogram = avgPerUserD.histogram(20);
 
         // Save file
 
@@ -72,7 +72,7 @@ public class FreqTag {
         }
         out.close();
 
-        System.out.println("Shriram: Output written to file !");
+        System.out.println("Program_Log: Output written to file !");
 
         sc.stop();
         sc.close();

@@ -7,6 +7,7 @@ import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.PairFlatMapFunction;
+import org.apache.spark.storage.StorageLevel;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -32,23 +33,20 @@ public class InterGraph {
          */
 
         // Open file
-        JavaRDD<String> twitterData = sc.textFile(inputFile).cache();
+        JavaRDD<String> twitterData = sc.textFile(inputFile).persist(StorageLevel.MEMORY_AND_DISK());
         System.out.println("Program_Log: File Opened !");
 
         // Get vertex info
-        JavaRDD<String> vertexInfo = twitterData.flatMapToPair((PairFlatMapFunction<String, Tuple2<Long, Long>, String>) InterGraph::getVertex).reduceByKey((x, y) -> x + "," + y).map(x -> x._1._1 + "," + x._1._2 + "," + x._2).cache();
+        JavaRDD<String> vertexInfo = twitterData.flatMapToPair((PairFlatMapFunction<String, Tuple2<Long, Long>, String>) InterGraph::getVertex).reduceByKey((x, y) -> x + "," + y).map(x -> x._1._1 + "," + x._1._2 + "," + x._2);
         System.out.println("Program_Log: Obtained Vertex Info !");
 
         // Get Edge info
-        JavaRDD<String> edgeInfo = twitterData.flatMapToPair((PairFlatMapFunction<String, Tuple2<Long, Long>, String>) InterGraph::getEdge).reduceByKey((x, y) -> x + ";" + y).map(x -> x._1._1 + "," + x._1._2 + ";" + x._2).cache();
+        JavaRDD<String> edgeInfo = twitterData.flatMapToPair((PairFlatMapFunction<String, Tuple2<Long, Long>, String>) InterGraph::getEdge).reduceByKey((x, y) -> x + ";" + y).map(x -> x._1._1 + "," + x._1._2 + ";" + x._2);
         System.out.println("Program_Log: Obtained Vertex Info !");
 
         // Save File
         vertexInfo.coalesce(1,true).saveAsTextFile(vertexFile);
         edgeInfo.coalesce(1,true).saveAsTextFile(edgeFile);
-
-        System.out.println("Program_Log: Vertex Count: " + vertexInfo.count());
-        System.out.println("Program_Log: Edge Count: " + edgeInfo.count());
 
         sc.stop();
         sc.close();

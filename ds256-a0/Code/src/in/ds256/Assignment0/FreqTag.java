@@ -9,17 +9,12 @@ import org.apache.spark.api.java.JavaDoubleRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaPairRDD;
-import org.apache.spark.api.java.function.FlatMapFunction;
 import org.apache.spark.api.java.function.PairFlatMapFunction;
 import org.json.simple.JSONArray;
 import org.json.simple.parser.*;
 import org.json.simple.JSONObject;
 import scala.Tuple2;
-
-import java.io.BufferedWriter;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.net.URI;
 import java.util.Collections;
 import java.util.Iterator;
@@ -65,7 +60,7 @@ public class FreqTag {
         Configuration conf = new Configuration();
         FileSystem fs = FileSystem.get(URI.create(outputFile), conf);
         FSDataOutputStream out = fs.create(new Path(outputFile));
-        for(int i=0; i<10; i++) {
+        for(int i=0; i<20; i++) {
             out.write((histogram._1[i]+",").getBytes());
             out.write((histogram._2[i]+"").getBytes());
             out.write(("\n").getBytes());

@@ -378,6 +378,8 @@ Graph partitioning is non-trivial due to the structure and heterogeneity of edge
 
 An edge-fog-cloud system deployed on a city-wide network can have on the order of thousands of devices.  The query engine has to efficiently scale to this size and simultaneously provide acceptable level of performance.
 
+Existing query engines are built on platforms or frameworks that are resoure heavy. In order to run the proposed engine on the edge device, a significant optimization of the system in terms of resource requirements is neccessary. 
+
 \section{Related Work}
 
 \emph{Pregel}, \emph{Giraph} and \emph{GraphX} are designed as batch mode graph processing frameworks for commodity clusters which are not suitable for interactive queries.
@@ -388,11 +390,27 @@ An edge-fog-cloud system deployed on a city-wide network can have on the order o
 
 \emph{C-Tree} and \emph{Views} provide efficient indexing techniques for subgraph isomorphism queries. However, these indexes are not designed for distributed systems where the index has to be partitioned along with the graph data.
 
-\emph{FERRARI} describes an efficient index for reachability and path queries. However, It is not straightforward to translate the design for our distributed setup.
+\emph{FERRARI} describes an efficient index for reachability and path queries. However, it is not straightforward to translate the design for our distributed setup.
 
 \emph{GraphS} provides an efficient indexing technique to perform cycle detection in large distributed dynamic graphs with low latency. Our engine can adopt this technique for heterogenous device setup.  
 
+\emph{GoDB} is one of the closest work to the proposd engine. It is a distributed graph database which supports declarative queries on large property graphs. \emph{GoDB} is built on \emph{GoFFish} subgraph-centric batch processing platform thereby using its scalability.  
+
+\emph{GoDB} supports vertex, edge, path and reachability queries. It also come with a novel cost model which uses execution heuristics to come with a optimim query plan that minimizes latency.
+
+However, it is not designed to work on heteregenous device layout and is not capable of running on the edge devices. It comes with indexing mechanism for filtering vertices and edges based on properties but lack query type specific indexes which can dramatically reduce the query processing time.
+
+\emph{GoDB} also do not have any caching mechanism and therefore cannnot leverage on temporal and spatial locality of input queries. 
+
+\emph{Quegel} system provides a vertex centric programming model for processing graph on commodity clusters. It treats queries as first class citizens and uses a novel superstep-sharing execution model along with \emph{Hub} indexing technique to improve utilization of resources and performance.
+
+However, it lacks a declarative query model and graph partitioning technique to support heterogenous devices and targets only commodity clusters.
+
+It seems apparant that there are no graph querying system that solves the eaxct problem of graph querying in edge-fog-cloud. 
+
 \section{Problem Definition and Approach}
+
+The proposed graph consists of different modules spanning across the edge, fog and cloud layer.  
 
 \section{Proposed Experiments}
 

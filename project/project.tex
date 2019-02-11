@@ -368,15 +368,34 @@ In this project, following are the key contributions:
 \end{itemize}
 
 \section{Novelty/Scalability}
+This problem is novel and has the following scalability challenges: The size of real-world knowledge graph data is massive with respect to the storage available in edges. For example, YAGO which is a semantic knowledge base has about 10 million nodes and 120 million edges along with various properties. It has a total size of 170 GB (uncompressed).
+
+Many of the graph mining problems and pattern matching (subgraph isomorphism) are NP complete which means that they cannot be feasibly computed in real time using just the edge devices. 
+
+The knowledge graphs are relatively dynamic in nature with multiple updates throughout the graph happening in a short time interval. This poses a challenge in terms of building and updating indexes rapidly.
+
+Graph partitioning is non-trivial due to the structure and heterogeneity of edge-fog-cloud. Many of the IoT applications require real-time answers whereas the existing distributed graph engines typically address batch processing queries with high latency.
+
+An edge-fog-cloud system deployed on a city-wide network can have on the order of thousands of devices.  The query engine has to efficiently scale to this size and simultaneously provide acceptable level of performance.
 
 \section{Related Work}
+
+\emph{Pregel}, \emph{Giraph} and \emph{GraphX} are designed as batch mode graph processing frameworks for commodity clusters which are not suitable for interactive queries.
+
+\emph{Trinity} is a distributed graph engine built as a in-memory key-value store. Though it is possible to perform interactive graph querying, the engine depends on high-speed network and requires large memory both of which are not feasible in edge-fog-cloud.
+
+\emph{GC} focusses on caching graph queries and results for graph isomorphism problems. It also provides novel cache replacement strategies for different workloads. However, it does not address other query types and is not designed for hierarchical device layout like in our case.
+
+\emph{C-Tree} and \emph{Views} provide efficient indexing techniques for subgraph isomorphism queries. However, these indexes are not designed for distributed systems where the index has to be partitioned along with the graph data.
+
+\emph{FERRARI} describes an efficient index for reachability and path queries. However, It is not straightforward to translate the design for our distributed setup.
+
+\emph{GraphS} provides an efficient indexing technique to perform cycle detection in large distributed dynamic graphs with low latency. Our engine can adopt this technique for heterogenous device setup.  
 
 \section{Problem Definition and Approach}
 
 \section{Proposed Experiments}
 
-\section{Related Work and Citation}
-\label{sec:related}
 ~\cite{simmhan:cise:2013} ~\footnote{Please refer to the IEEE Taxonomy for more details. \url{http://www.computer.org/portal/web/publications/acmtaxonomy}}.
 
 % trigger a \newpage just before the given reference

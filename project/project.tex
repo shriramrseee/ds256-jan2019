@@ -361,7 +361,7 @@ Existing graph processing/querying systems are designed for commodity hardware a
 \end{figure}
 In this project, following are the key contributions:
 \begin{itemize}%[noitemsep,topsep=0pt,parsep=0pt,partopsep=0pt]
-	\item \textbf{Graph Partitioning:} A novel graph partitioning approach is used which partitions the graph based on the locality of query. This means that the portion of knowledge graph which is required by a query is identified and moved closer to the device performing the query automatically 
+	\item \textbf{Graph Partitioning:} A novel graph partitioning approach is used which partitions the graph based on the selectivity of query. This means that the portion of knowledge graph which is frequently required by a query source is identified and moved closer to the device performing the query automatically 
 	\item \textbf{Query Planning:} A query planner which can efficiently partition the query predicates according to graph locality and placement thereby optimizing query cost is implemented
 	\item \textbf{Query Caching:} A novel query caching system is devised which caches recent queries by edges and their corresponding results in the fog layer. It exploits the temporal and spatial locality of queries to provide low latency respone. It also has a novel cache replacement policy and can match an incoming query with cache. 
 	\item \textbf{Graph Indexing} Index data structures from existing literature that can accelerate the processing of queries are built in a distributed fashion and are used for pruning the knowledge graph for processing. Different type of indexes are built for each query type and are maintained dynamically as per updates to the knowledge graph    
@@ -410,7 +410,53 @@ It seems apparant that there are no graph querying system that solves the eaxct 
 
 \section{Problem Definition and Approach}
 
-The proposed graph consists of different modules spanning across the edge, fog and cloud layer.  
+The proposed graph engine consists of different modules spanning across the edge, fog and cloud layer. Figure 2 illustrates the high level architecture of the system. Additional details and functionalities present in each layer is given below,
+
+\begin{figure*}[th]
+	\centering%~%
+	\subfloat[High Level Architecture]{
+		\includegraphics[height=0.23\textheight]{2.png}
+		\label{fig:arch}
+	}\qquad
+	\subfloat[Logical Flow]{
+		\includegraphics[height=0.15\textheight]{3.png}
+		\label{fig:logic-flow}
+	}\\
+	\label{fig:problem-approach}
+	\caption{Proposed Design}
+	\vspace{-0.1in}
+\end{figure*} 
+
+\begin{itemize}%[noitemsep,topsep=0pt,parsep=0pt,partopsep=0pt]
+	\item \textbf{Cloud Layer:} This layer consists of multiple nodes (VMs) that are interconnected. One of these nodes is a the Head or master node while the other nodes are the workers. GoDB database engine is deployed on top of these nodes and serve as the core graph querying engine. These nodes are commodity grade. The global knowledge graph is hosted in the GoFS data storage
+	\item \textbf{Fog Layer: } Fog layer consists of three essential modules. The Cache module consists of statistics manager for maintaining the statistics, cache replacement logic and cache store for storing the queries and their corresponding results. The Fog logic module is responsible for sending the query to cloud, retrieve the results and pass them to edge. It also performs cache check for any incoming query from the edge. The coordination module is used to manage the edges which includes edge discovery and communicate with other fogs
+	\item \textbf{Edge Layer: }	Edge layer consists of a local data store which stores the local knowledge graph. This partition of graph is assumed to queried most frequently by the corresponding edge. Each edge consists of a worker which performs graph processing locally. There is a edge logic module that includes the logic for query partitioning and result combiner 
+\end{itemize}
+
+Figure 2 shows the logical flow for a single query from query submission to obtaining the results. A deatiled description of each step is given below,
+
+\begin{enumerate}%[noitemsep,topsep=0pt,parsep=0pt,partopsep=0pt]
+	\item The graph query in declarative language is submitted to the edge from a client. The client could very well be the edge itself. The proposed design should can be trivially extended to handling clients in fog and cloud. Only edge level clients are covered in this section
+	\item The query partition logic essentially splits the input query into two. One part of the query is run on the edge using the local knowledge graph and the other part is sent to the fog layer. The objective of this partitioning is to run the query in parallel on both edge and cloud and merge the results
+	\item The fog logic receives the global query from edge and checks the cache first for a hit. It will also send the query to neighbouring fogs to check for cache hit to allow for spatial locality. If there is a cache hit, the fog retrieves the query result or else it contacts the cloud layer to retrieve the result. 
+	\item The edge worker receives the local query and start the processing for the given query type. The worker follows subgraph centric model similar to GoDB and the entire local knowledge graph is treated as a single subgraph for this purpose. The cloud head node receives the global query in parallel and computes the result using the worker nodes. 
+	\item Once the result is computed in cloud, it is sent to result combiner in edge through the parent fog. Note that this is only a partial result for the original input query
+	\item The local worker on the edge finshes its task and sends the result to the combiner. The combiner logic then merges the result from edge and cloud using a query type specific logic and sends the merge result to the client 
+\end{enumerate}
+
+The graph partitioning between edges and cloud happens by specifying a central vertex for each edge device. The central vertex along with its neighbours within a specified distance is captured and stored as the local knowledge graph.
+
+For the purpose of this project, the knowledge graph is assumed to be static. For dynamic graphs, additional logic is required in edge, fog and cloud to update the indexes, cache and the graph data itself.
+
+The implementation in edge and fog will be done in Python language as it is known to be lightweight in terms resource requirement. The communication between the devices is handled through gRPC framework. Cache data in Fog layer will be in-memory as the fog layer is known to be reliable and will be spilled to disk only if necessary.
+
+Graph indexing is considered as good to have functionality with respect to the scope of this project. It will be potentially stored along with the graph data and additional modules will be added in edge layer to make use of the indexes.
+
+Also, depending upon the feasibility of deploying GoDB on the cloud, it might be necessary to replace it with other distributed graph database. This should not affect any functionality in the edge and fog as long as the interface is made constant.
+
+Major implementation effort is needed to complete the worker and edge logic modules as these will have different logic for each query type. Feasibility of porting some of the query planning and optimization logic from GoDB will be explored before the actual implementation.
+
+Additional details regarding the query partition and result combining logic is omitted due to lack of space. It will be added in depth in the final project report.
 
 \section{Proposed Experiments}
 

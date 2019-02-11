@@ -368,7 +368,7 @@ In this project, following are the key contributions:
 \end{itemize}
 
 \section{Novelty/Scalability}
-This problem is novel and has the following scalability challenges: The size of real-world knowledge graph data is massive with respect to the storage available in edges. For example, YAGO which is a semantic knowledge base has about 10 million nodes and 120 million edges along with various properties. It has a total size of 170 GB (uncompressed).
+This problem is novel and has the following scalability challenges: The size of real-world knowledge graph data is massive with respect to the storage available in edges. For example, YAGO\cite{Suchanek:2007:YCS:1242572.1242667} which is a semantic knowledge base has about 10 million nodes and 120 million edges along with various properties. It has a total size of 170 GB (uncompressed).
 
 Many of the graph mining problems and pattern matching (subgraph isomorphism) are NP complete which means that they cannot be feasibly computed in real time using just the edge devices. 
 
@@ -382,19 +382,19 @@ Existing query engines are built on platforms or frameworks that are resoure hea
 
 \section{Related Work}
 
-\emph{Pregel}, \emph{Giraph} and \emph{GraphX} are designed as batch mode graph processing frameworks for commodity clusters which are not suitable for interactive queries.
+\emph{Pregel}\cite{Malewicz:2010:PSL:1807167.1807184}, \emph{Giraph}\cite{Ching:2015:OTE:2824032.2824077} and \emph{GraphX}\cite{Xin:2013:GRD:2484425.2484427} are designed as batch mode graph processing frameworks for commodity clusters which are not suitable for interactive queries.
 
-\emph{Trinity} is a distributed graph engine built as a in-memory key-value store. Though it is possible to perform interactive graph querying, the engine depends on high-speed network and requires large memory both of which are not feasible in edge-fog-cloud.
+\emph{Trinity}\cite{Shao:2013:TDG:2463676.2467799} is a distributed graph engine built as a in-memory key-value store. Though it is possible to perform interactive graph querying, the engine depends on high-speed network and requires large memory both of which are not feasible in edge-fog-cloud.
 
-\emph{GC} focusses on caching graph queries and results for graph isomorphism problems. It also provides novel cache replacement strategies for different workloads. However, it does not address other query types and is not designed for hierarchical device layout like in our case.
+\emph{GC}\cite{enlighten130141} focusses on caching graph queries and results for graph isomorphism problems. It also provides novel cache replacement strategies for different workloads. However, it does not address other query types and is not designed for hierarchical device layout like in our case.
 
-\emph{C-Tree} and \emph{Views} provide efficient indexing techniques for subgraph isomorphism queries. However, these indexes are not designed for distributed systems where the index has to be partitioned along with the graph data.
+\emph{C-Tree}\cite{1617406} and \emph{Views}\cite{6816650} provide efficient indexing techniques for subgraph isomorphism queries. However, these indexes are not designed for distributed systems where the index has to be partitioned along with the graph data.
 
-\emph{FERRARI} describes an efficient index for reachability and path queries. However, it is not straightforward to translate the design for our distributed setup.
+\emph{FERRARI}\cite{6544893} describes an efficient index for reachability and path queries. However, it is not straightforward to translate the design for our distributed setup.
 
-\emph{GraphS} provides an efficient indexing technique to perform cycle detection in large distributed dynamic graphs with low latency. Our engine can adopt this technique for heterogenous device setup.  
+\emph{GraphS}\cite{Qiu:2018:RCC:3229863.3275554} provides an efficient indexing technique to perform cycle detection in large distributed dynamic graphs with low latency. Our engine can adopt this technique for heterogenous device setup.  
 
-\emph{GoDB} is one of the closest work to the proposd engine. It is a distributed graph database which supports declarative queries on large property graphs. \emph{GoDB} is built on \emph{GoFFish} subgraph-centric batch processing platform thereby using its scalability.  
+\emph{GoDB}\cite{jamadagni:ccgrid:2016} is one of the closest work to the proposd engine. It is a distributed graph database which supports declarative queries on large property graphs. \emph{GoDB} is built on \emph{GoFFish} subgraph-centric batch processing platform thereby using its scalability.  
 
 \emph{GoDB} supports vertex, edge, path and reachability queries. It also come with a novel cost model which uses execution heuristics to come with a optimim query plan that minimizes latency.
 
@@ -402,7 +402,7 @@ However, it is not designed to work on heteregenous device layout and is not cap
 
 \emph{GoDB} also do not have any caching mechanism and therefore cannnot leverage on temporal and spatial locality of input queries. 
 
-\emph{Quegel} system provides a vertex centric programming model for processing graph on commodity clusters. It treats queries as first class citizens and uses a novel superstep-sharing execution model along with \emph{Hub} indexing technique to improve utilization of resources and performance.
+\emph{Quegel}\cite{Yan:2016:GQF:2904483.2904488} system provides a vertex centric programming model for processing graph on commodity clusters. It treats queries as first class citizens and uses a novel superstep-sharing execution model along with \emph{Hub} indexing technique to improve utilization of resources and performance.
 
 However, it lacks a declarative query model and graph partitioning technique to support heterogenous devices and targets only commodity clusters.
 
@@ -459,8 +459,6 @@ Major implementation effort is needed to complete the worker and edge logic modu
 Additional details regarding the query partition and result combining logic is omitted due to lack of space. It will be added in depth in the final project report.
 
 \section{Proposed Experiments}
-
-~\cite{simmhan:cise:2013} ~\footnote{Please refer to the IEEE Taxonomy for more details. \url{http://www.computer.org/portal/web/publications/acmtaxonomy}}.
 
 % trigger a \newpage just before the given reference
 % number - used to balance the columns on the last page

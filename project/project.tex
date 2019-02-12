@@ -361,9 +361,9 @@ Existing graph processing/querying systems are designed for commodity hardware a
 \end{figure}
 In this project, following are the key contributions:
 \begin{itemize}%[noitemsep,topsep=0pt,parsep=0pt,partopsep=0pt]
-	\item \textbf{Graph Partitioning:} A novel graph partitioning approach is used which partitions the graph based on the selectivity of query. This means that the portion of knowledge graph which is frequently required by a query source is identified and moved closer to the device performing the query automatically 
-	\item \textbf{Query Planning:} A query planner which can efficiently partition the query predicates according to graph locality and placement thereby optimizing query cost is implemented
-	\item \textbf{Query Caching:} A novel query caching system is devised which caches recent queries by edges and their corresponding results in the fog layer. It exploits the temporal and spatial locality of queries to provide low latency response. It also has a novel cache replacement policy and can match an incoming query with cache. 
+	\item \textbf{Graph Partitioning:} A novel graph partitioning approach is used which partitions the graph based on the edge device. This means that the portion of knowledge graph which is frequently required by a query source is identified and moved closer to the edge device which performs the query automatically 
+	\item \textbf{Query Partitioning:} A query planner which can efficiently partition the query and its predicates according to graph locality and placement thereby optimizing query cost is implemented
+	\item \textbf{Query Caching:} A novel query caching system is devised which caches recent queries by edges and their corresponding results in the fog layer. It exploits the temporal and spatial locality of queries to provide low latency response. It also has a novel cache replacement policy and can quickly match an incoming query with cache. 
 	\item \textbf{Graph Indexing} Index data structures from existing literature that can accelerate the processing of queries are built in a distributed fashion and are used for pruning the knowledge graph for processing. Different type of indexes are built for each query type and are maintained dynamically as per updates to the knowledge graph    
 \end{itemize}
 
@@ -410,7 +410,7 @@ It seems apparent that there are no graph querying system that solves the exact 
 
 \section{Problem Definition and Approach}
 
-The proposed graph engine consists of different modules spanning across the edge, fog and cloud layer. Figure 2 illustrates the high level architecture of the system. Additional details and functionalities present in each layer is given below,
+The proposed graph engine consists of different modules spanning across the edge, fog and cloud layer. \emph{Figure 2} illustrates the high level architecture of the system. Additional details and functionalities present in each layer is given below,
 
 \begin{figure*}[th]
 	\centering%~%
@@ -433,7 +433,7 @@ The proposed graph engine consists of different modules spanning across the edge
 	\item \textbf{Edge Layer: }	Edge layer consists of a local data store which stores the local knowledge graph. This partition of graph is assumed to queried most frequently by the corresponding edge. Each edge consists of a worker which performs graph processing locally. There is a edge logic module that includes the logic for query partitioning and result combiner 
 \end{itemize}
 
-Figure 2 shows the logical flow for a single query from query submission to obtaining the results. A detailed description of each step is given below,
+\emph{Figure 2} shows the logical flow for a single query from query submission to obtaining the results. A detailed description of each step is given below,
 
 \begin{enumerate}%[noitemsep,topsep=0pt,parsep=0pt,partopsep=0pt]
 	\item The graph query in declarative language is submitted to the edge from a client. The client could very well be the edge itself. The proposed design should can be trivially extended to handling clients in fog and cloud. Only edge level clients are covered in this section

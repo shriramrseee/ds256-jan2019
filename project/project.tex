@@ -329,7 +329,7 @@ basicstyle=\ttfamily\footnotesize,
 
 \begin{document}
 
-\title{Distributed Knowledge Graph Querying on \\ Edge, Fog and Cloud}
+\title{Distributed Knowledge Graph Querying on \\ Edge and Cloud}
 
 
 \author{\IEEEauthorblockN{Shriram R.}\\
@@ -343,27 +343,27 @@ Email: shriramr@iisc.ac.in}
 
 
 \begin{abstract}
-Knowledge graphs with millions of vertices and edges are currently being used to enable smart devices and knowledge discovery. IoT (Internet of Things) devices are becoming the consumer and producer of such large graphs. Existing graph querying and processing systems are designed to run on commodity hardware. However, IoT applications need lightweight graph processing systems that can scale across large number of devices and  handle concurrent queries with low latency. In this project, a lightweight distributed graph querying engine is proposed which can natively scale across edge, fog and cloud devices. It supports declarative query model for vertex, edge, reachability, shortest path and subgraph pattern mining queries. The engine has a novel caching, indexing and query partitioning mechanism which enables to scale efficiently with graph size and query workload. The engine is evaluated on a large scale virtual IoT testbed with massive real-world knowledge graphs. The results indicate that the engine can provide x\% lower latency on a diverse query workload and can handle y\% more queries concurrently compared to the baseline system.
+Knowledge graphs with millions of vertices and edges are currently being used to enable smart devices and knowledge discovery. IoT (Internet of Things) devices are becoming the consumer and producer of such large graphs. Existing graph querying and processing systems are designed to run on commodity hardware. However, IoT applications need lightweight graph processing systems that can scale across large number of devices and  handle concurrent queries with low latency. In this project, a lightweight distributed graph querying engine is proposed which can natively scale across edge and cloud devices. It supports declarative query model for vertex, edge, reachability, shortest path and subgraph pattern mining queries. The engine has a novel caching, indexing and query partitioning mechanism which enables to scale efficiently with graph size and query workload. The engine is evaluated on a large scale virtual IoT testbed with massive real-world knowledge graphs. The results indicate that the engine can scale to many devices and provide x\% lower latency on a diverse query workload compared to the baseline system.
 \end{abstract}
 
 \section{Problem Description}
-The problem that is being solved in this project is the scaling of graph querying on edge, fog and cloud devices which can provide low-latency query response for many concurrent queries on massive knowledge graphs. \emph{Figure 1} shows a representation of typical edge-fog-cloud layout. There is a hierarchical structure where fogs can communicate with edges and cloud and the edges can directly communicate with only fog. Each edge is associated with a single fog depending on its spatial proximity or any other parameter. The bandwidth and latency of edge-fog, fog-fog and fog-cloud network links are significantly different from each other.
+The problem that is being solved in this project is the scaling of graph querying on edge and cloud devices which can provide low-latency query response for many concurrent queries on massive knowledge graphs. \emph{Figure 1} shows a representation of typical edge-cloud layout. There is a hierarchical structure where edges can communicate with other edges and can directly communicate with only one cloud device. Each edge may be associated with a single fog device depending on its spatial proximity or any other parameter. The bandwidth and latency of edge-edge and edge-cloud network links are significantly different from each other.
 
-The edge, fog and cloud devices are heterogenous and have different compute and storage capabilities. In addition, the device failure rate varies across the layers with edge having the highest failure rate. In this project however, all the devices are considered to be 100\% reliable.
+The edge and cloud devices are heterogenous and have different compute and storage capabilities. In addition, the device failure rate varies across the layers with edge having the highest failure rate. In this project however, all the devices are considered to be 100\% reliable.
 
-Existing graph processing/querying systems are designed for commodity hardware and cannot be efficiently deployed on low powered edge devices like smartphones, smart home appliances etc. These systems do not take into account the network hierarchy and device heterogeneity that exists on the current edge-fog-cloud layout. The proposed graph querying engine uses GoDB which is a distributed graph database as the backend and implements the novel features on top of the database.
+Existing graph processing/querying systems are designed for commodity hardware and cannot be efficiently deployed on low powered edge devices like smartphones, smart home appliances etc. These systems do not take into account the network hierarchy and device heterogeneity that exists on the current edge-cloud layout. The proposed graph querying engine uses GoDB which is a distributed graph database as the backend and implements the novel features on top of the database.
 
 \begin{figure}[!t]
 	\centering
-	\includegraphics[width=0.75\columnwidth]{1.png}
-	\caption{Edge-Fog-Cloud Layout}
+	\includegraphics[width=0.83\columnwidth]{4.png}
+	\caption{Edge-Cloud Layout}
 	\label{fig:1}
 \end{figure}
 In this project, following are the key contributions:
 \begin{itemize}%[noitemsep,topsep=0pt,parsep=0pt,partopsep=0pt]
 	\item \textbf{Graph Partitioning:} A novel graph partitioning approach is used which partitions the graph based on the edge device. This means that the portion of knowledge graph which is frequently required by a query source is identified and moved closer to the edge device which performs the query automatically 
 	\item \textbf{Query Partitioning:} A query planner which can efficiently partition the query and its predicates according to graph locality and placement thereby optimizing query cost is implemented
-	\item \textbf{Query Caching:} A novel query caching system is devised which caches recent queries by edges and their corresponding results in the fog layer. It exploits the temporal and spatial locality of queries to provide low latency response. It also has a novel cache replacement policy and can quickly match an incoming query with cache. 
+	\item \textbf{Query Caching:} A novel query caching system is devised which caches recent queries by edges and their corresponding results in the edge layer. It exploits the temporal and spatial locality of queries to provide low latency response. It also has a novel cache replacement policy and can quickly match an incoming query with cache. 
 	\item \textbf{Graph Indexing} Index data structures from existing literature that can accelerate the processing of queries are built in a distributed fashion and are used for pruning the knowledge graph for processing. Different type of indexes are built for each query type and are maintained dynamically as per updates to the knowledge graph    
 \end{itemize}
 
@@ -374,9 +374,9 @@ Many of the graph mining problems and pattern matching (subgraph isomorphism) ar
 
 The knowledge graphs are relatively dynamic in nature with multiple updates throughout the graph happening in a short time interval. This poses a challenge in terms of building and updating indexes rapidly.
 
-Graph partitioning is non-trivial due to the structure and heterogeneity of edge-fog-cloud. Many of the IoT applications require real-time answers whereas the existing distributed graph engines typically address batch processing queries with high latency.
+Graph partitioning is non-trivial due to the structure and heterogeneity of edge-cloud layout. Many of the IoT applications require real-time answers whereas the existing distributed graph engines typically address batch processing queries with high latency.
 
-An edge-fog-cloud system deployed on a city-wide network can have on the order of thousands of devices.  The query engine has to efficiently scale to this size and simultaneously provide acceptable level of performance.
+An edge-cloud system deployed on a city-wide network can have on the order of thousands of devices.  The query engine has to efficiently scale to this size and simultaneously provide acceptable level of performance.
 
 Existing query engines are built on platforms or frameworks that are resource heavy. In order to run the proposed engine on the edge device, a significant optimization of the system in terms of resource requirements is necessary. 
 
@@ -384,7 +384,7 @@ Existing query engines are built on platforms or frameworks that are resource he
 
 \emph{Pregel}\cite{Malewicz:2010:PSL:1807167.1807184}, \emph{Giraph}\cite{Ching:2015:OTE:2824032.2824077} and \emph{GraphX}\cite{Xin:2013:GRD:2484425.2484427} are designed as batch mode graph processing frameworks for commodity clusters which are not suitable for interactive queries.
 
-\emph{Trinity}\cite{Shao:2013:TDG:2463676.2467799} is a distributed graph engine built as a in-memory key-value store. Though it is possible to perform interactive graph querying, the engine depends on high-speed network and requires large memory both of which are not feasible in edge-fog-cloud.
+\emph{Trinity}\cite{Shao:2013:TDG:2463676.2467799} is a distributed graph engine built as a in-memory key-value store. Though it is possible to perform interactive graph querying, the engine depends on high-speed network and requires large memory both of which are not feasible in edge-cloud.
 
 \emph{GC}\cite{enlighten130141} focusses on caching graph queries and results for graph isomorphism problems. It also provides novel cache replacement strategies for different workloads. However, it does not address other query types and is not designed for hierarchical device layout like in our case.
 
@@ -406,20 +406,20 @@ However, it is not designed to work on heterogenous device layout and is not cap
 
 However, it lacks a declarative query model and graph partitioning technique to support heterogenous devices and targets only commodity clusters.
 
-It seems apparent that there are no graph querying system that solves the exact problem of graph querying in edge-fog-cloud. 
+It is apparent that there are no graph querying system that solves the exact problem of graph querying in edge-cloud layout. 
 
 \section{Problem Definition and Approach}
 
-The proposed graph engine consists of different modules spanning across the edge, fog and cloud layer. \emph{Figure 2} illustrates the high level architecture of the system. Additional details and functionalities present in each layer is given below,
+The proposed graph engine consists of different modules spanning across the edge and cloud layer. \emph{Figure 2} illustrates the high level architecture of the system. Additional details and functionalities present in each layer is given below,
 
 \begin{figure*}[th]
 	\centering%~%
 	\subfloat[High Level Architecture]{
-		\includegraphics[height=0.23\textheight]{2.png}
+		\includegraphics[height=0.23\textheight]{5.png}
 		\label{fig:arch}
 	}\qquad
 	\subfloat[Logical Flow]{
-		\includegraphics[height=0.15\textheight]{3.png}
+		\includegraphics[height=0.15\textheight]{6.png}
 		\label{fig:logic-flow}
 	}\\
 	\label{fig:problem-approach}
@@ -429,42 +429,51 @@ The proposed graph engine consists of different modules spanning across the edge
 
 \begin{itemize}%[noitemsep,topsep=0pt,parsep=0pt,partopsep=0pt]
 	\item \textbf{Cloud Layer:} This layer consists of multiple nodes (VMs) that are interconnected. One of these nodes is a the Head or master node while the other nodes are the workers. GoDB database engine is deployed on top of these nodes and serve as the core graph querying engine. These nodes are commodity grade. The global knowledge graph is hosted in the GoFS data storage
-	\item \textbf{Fog Layer: } Fog layer consists of three essential modules. The Cache module consists of statistics manager for maintaining the statistics, cache replacement logic and cache store for storing the queries and their corresponding results. The Fog logic module is responsible for sending the query to cloud, retrieve the results and pass them to edge. It also performs cache check for any incoming query from the edge. The coordination module is used to manage the edges which includes edge discovery and communicate with other fogs
-	\item \textbf{Edge Layer: }	Edge layer consists of a local data store which stores the local knowledge graph. This partition of graph is assumed to queried most frequently by the corresponding edge. Each edge consists of a worker which performs graph processing locally. There is a edge logic module that includes the logic for query partitioning and result combiner 
+	\item \textbf{Edge Layer: }	Edge layer consists of three essential modules. There is a edge logic module that includes the logic for query partitioning and result combiner. The coordination module is used to manage the edge which includes edge-cloud communication and communicate with other edges.
+	
+	The Cache module consists of statistics manager for maintaining the statistics, cache replacement logic and cache store for storing the queries and their corresponding results. It also performs cache check for any incoming query from the edge.
+	
+	It has a local data store which stores the local knowledge graph. This partition of graph is assumed to queried most frequently by the corresponding edge. Each edge consists of a worker which performs graph processing locally. 
 \end{itemize}
 
 \emph{Figure 2} shows the logical flow for a single query from query submission to obtaining the results. A detailed description of each step is given below,
 
 \begin{enumerate}%[noitemsep,topsep=0pt,parsep=0pt,partopsep=0pt]
-	\item The graph query in declarative language is submitted to the edge from a client. The client could very well be the edge itself. The proposed design should can be trivially extended to handling clients in fog and cloud. Only edge level clients are covered in this section
-	\item The query partition logic essentially splits the input query into two. One part of the query is run on the edge using the local knowledge graph and the other part is sent to the fog layer. The objective of this partitioning is to run the query in parallel on both edge and cloud and merge the results
-	\item The fog logic receives the global query from edge and checks the cache first for a hit. It will also send the query to neighbouring fogs to check for cache hit to allow for spatial locality. If there is a cache hit, the fog retrieves the query result or else it contacts the cloud layer to retrieve the result. 
-	\item The edge worker receives the local query and start the processing for the given query type. The worker follows subgraph centric model similar to GoDB and the entire local knowledge graph is treated as a single subgraph for this purpose. The cloud head node receives the global query in parallel and computes the result using the worker nodes. 
-	\item Once the result is computed in cloud, it is sent to result combiner in edge through the parent fog. Note that this is only a partial result for the original input query
-	\item The local worker on the edge finishes its task and sends the result to the combiner. The combiner logic then merges the result from edge and cloud using a query type specific logic and sends the merge result to the client 
+	\item The graph query in declarative language is submitted to the edge from a client. The client could very well be the edge itself. Cloud level clients are not covered in this project
+	\item The query partition logic essentially splits the input query into two. One part of the query is run on the edge using the local knowledge graph and the other part is sent to the cloud layer. The objective of this partitioning is to run the query in parallel on both edge and cloud and merge the results
+	\item The cache logic receives the global query from edge and checks the cache first for a hit. It will also send the query to neighbouring edges to check for cache hit to allow for spatial locality. If there is a cache hit, the logic retrieves the query result or else it contacts the cloud layer to retrieve the result. Only global query result is cached as they provide the maximum benefit.
+	\item The edge worker receives the local query and start the processing for the given query type. The cloud head node receives the global query and computes the result using the worker nodes in parallel. The worker follows subgraph centric model similar to GoDB and the entire local knowledge graph is treated as a single subgraph for this purpose. 
+	\item Once the result is computed in cloud, it is sent to result combiner in edge. Note that this is only a partial result for the original input query
+	\item The local worker on the edge sends the query result to the combiner. The combiner logic then merges the result from edge and cloud using a query type specific logic and sends the merge result to the client 
 \end{enumerate}
 
-The graph partitioning between edges and cloud happens by specifying a central vertex for each edge device. The central vertex along with its neighbours within a specified distance is captured and stored as the local knowledge graph.
+The graph partitioning between edges and cloud happens by specifying a central vertex for each edge device. The central vertex along with its neighbours within a specified distance is captured and stored as the local knowledge graph. Adaptive partitioning will also be explored where partitioning is done based on query workload.
 
-For the purpose of this project, the knowledge graph is assumed to be static. For dynamic graphs, additional logic is required in edge, fog and cloud to update the indexes, cache and the graph data itself.
+For the purpose of this project, the knowledge graph is assumed to be static. For dynamic graphs, additional logic is required in edge and cloud to update the indexes, cache and the graph data itself.
 
-The implementation in edge and fog will be done in Python language as it is known to be lightweight in terms resource requirement. The communication between the devices is handled through gRPC framework. Cache data in Fog layer will be in-memory as the fog layer is known to be reliable and will be spilled to disk only if necessary.
-
-Graph indexing is considered as good to have functionality with respect to the scope of this project. It will be potentially stored along with the graph data and additional modules will be added in edge layer to make use of the indexes.
-
-Also, depending upon the feasibility of deploying GoDB on the cloud, it might be necessary to replace it with other distributed graph database. This should not affect any functionality in the edge and fog as long as the interface is made constant.
+Also, depending upon the feasibility of deploying GoDB on the cloud, it might be necessary to replace it with other distributed graph database such as \emph{Titan}\cite{titan} or \emph{Dgraph}\cite{dgraph}. This should not affect any functionality in the edge as long as the interface is made constant.
 
 Major implementation effort is needed to complete the worker and edge logic modules as these will have different logic for each query type. Feasibility of porting some of the query planning and optimization logic from GoDB will be explored before the actual implementation.
+
+The implementation in edge layer will be done in Python language as it is known to be lightweight in terms resource requirement. The communication between the devices is handled through gRPC framework.
+
+Cache data in edge layer will be in-memory as the cache size is generally small enough to fit in memory and will be spilled to persistent storage only if necessary.
+
+Graph indexing is considered as good to have functionality with respect to the scope of this project. It will be potentially stored as a separate data structure and additional modules will be added in edge layer to make use of the indexes. This will accelerate the performance of local query execution and can help if the local query processing takes more time than its counterpart.
+
+
 
 Additional details regarding the query partition and result combining logic is omitted due to lack of space. It will be added in depth in the final project report.
 
 \section{Proposed Experiments}
 
-The experimental setup is as follows: Microsoft Azure cloud platform will be used to run the entire edge-fog-cloud setup. 5 D4 VMs will be used to run the cloud layer. These VMs will host the GoDB head and worker nodes. GoDB uses GoFFish v2.6 and Java v1.7. VIoLET\cite{DBLP:journals/corr/abs-1806-06032} will be used to virtually emulate the fog and edge layer. 3 Fogs of type Nvidia TX1 will be created and each fog will connect to 20 edges of type Pi3B+. The latency and bandwidth of edge-fog, fog-fog and fog-cloud will be set to 1ms-50mbps, 1ms-100mbps and 5ms-20mbps respectively. All the devices will be running on CentOS v7.
+The experimental setup is as follows: Microsoft Azure cloud platform will be used to run the entire edge-cloud setup. 5 D4 VMs will be used to run the cloud layer. These VMs will host the GoDB head and worker nodes. GoDB uses GoFFish v2.6 and Java v1.7. VIoLET\cite{DBLP:journals/corr/abs-1806-06032} will be used to virtually emulate the entire edge layer. 20 edges of type Pi3B+ will be created and interconnected with each other. The latency and bandwidth of edge-edge and edge-cloud will be set to 1ms-50mbps and 5ms-20mbps respectively. All the devices will be running on CentOS v7.
 
-The YAGO dataset will be the primary knowledge graph data that will be used for the experiments. NELL\cite{Mitchell:2018:NL:3210350.3191513} could be used as a secondary dataset. The baseline system for comparison will be GoDB in cloud layer with edges and fogs running all the queries directly on the cloud. The graph is partitioned using METIS with one subgraph per core.
+The YAGO dataset will be the primary knowledge graph data that will be used for the experiments. Since the size of the full dataset is huge, only a fraction of the dataset will be potentially used based on the availability of sufficient cloud resources. NELL\cite{Mitchell:2018:NL:3210350.3191513} could be used as a secondary dataset. The baseline system for comparison will be GoDB in cloud layer with all the edges running all the queries directly on the cloud without caching. The graph in GoDB will be partitioned using METIS with one subgraph per core.
 
-The size of the knowledge graph that be accommodated inside the edge device will be determined through the following experiment - 1 query of each type will be triggered on the edge for different sizes of local graph which is doubled in each iteration. The same set of query will also be triggered in cloud and the time taken in both the cases will be measured. This size should be the maximum size in which the local query time is less than the global query time for the same subgraph. This size will be used in all the below experiments as well.
+The query workload for the experiments will be of the following types - Vertex search, Edge search, Reachability, Neighbourhood, Shortest Path and as a stretch goal, Subgraph Isomorphism. 
+
+The size of the knowledge graph that be accommodated inside the edge device will be determined through the following experiment - 10 queries of each type will be triggered on the edge for different sizes of local graph which is doubled in each iteration. The same set of query will also be triggered in cloud and the time taken in both the cases will be measured. This size should be the maximum size in which the local query time is less than the global query time for the same subgraph. This size will be used in all the below experiments as well.
 
 \textbf{Microbenchmarks}
 \begin{enumerate}%[noitemsep,topsep=0pt,parsep=0pt,partopsep=0pt]
@@ -472,20 +481,53 @@ The size of the knowledge graph that be accommodated inside the edge device will
 	\item Graph indexing time and memory has to be measured for different query types as a function of graph size. In this experiment, for each graph size, index construction time and index size is measured for each index type. The time taken and size should increase as per the time and space complexity of the index.
 \end{enumerate}
 
-The experiments will test the impact of query partitioning, query caching and graph indexing and the metric to measured is the query latency.  
+The experiments will test the impact of query partitioning, query caching and graph indexing. The key metric to be measured is the query latency (time to get the results).  
 
 \begin{enumerate}%[noitemsep,topsep=0pt,parsep=0pt,partopsep=0pt]
-	\item \textbf{Query Partitioning:} 100 random queries of each type (Vertex, Edge, Reachability, Shortest path and Subgraph isomorphism) will be triggered in total with the queries uniformly and randomly distributed across all the edges. The time taken to complete the query in the local knowledge graph, the global knowledge graph and query completion time is measured. When compared with baseline, the query completion time should be less in the new system and the local querying time should be far less than the global time since the size of local graph will be smaller compared to the global graph. This showcases the effectiveness of Query Partitioning on the performance.
-    \item \textbf{Query Caching:} There will be two baselines for comparison. One is the cloud only baseline and the other is the edge-fog-cloud setup with cache disabled. In this experiment, each edge will have 20 different queries. These queries will be executed 5 times each in random order. This is to enable repetition of the same query from a given edge device. The time taken to complete the query in local and global graph and the total time will be measured. The cache hit/miss count will also be logged for each query execution. The cache enabled version should ideally outperform the other two baselines in terms of global execution time since the global query result will be cached in the fog.
-    \item \textbf{Graph Indexing:} The baseline for graph indexing will be edge-fog-cloud setup with indexing disabled on the edge. This experiment consists of 100 random queries of each type similar to the Query Partitioning experiment. The time taken to complete the local query with index and without index is measured. The outcome should be that the time taken with index should be less than the without index baseline. The effectiveness of each index for each query type will be different since problems which are NP complete like subgraph isomorphism will offer more benefit in having the index than other simple problems like vertex or edge search.
+	\item \textbf{Query Partitioning:} 100 random queries of each type will be triggered in total with the queries uniformly and randomly distributed across all the edges. The time taken to complete the query in the local knowledge graph, the global knowledge graph and query completion time is measured. When compared with baseline, the query completion time should be less in the new system and the local querying time should be far less than the global time since the size of local graph will be smaller compared to the global graph. This showcases the effectiveness of Query Partitioning on the performance.
+    \item \textbf{Query Caching:} There will be two baselines for comparison. One is the cloud only baseline and the other is the edge-cloud setup with cache disabled. In this experiment, each edge will have 20 different queries. These queries will be executed 5 times each in random order. This is to enable repetition of the same query from a given edge device. The time taken to complete the query in local and global graph and the total time will be measured. The cache hit/miss count will also be logged for each query execution. The cache enabled version should ideally outperform the other two baselines in terms of global execution time since the global query result will be cached in the edge.
+    \item \textbf{Graph Indexing:} The baseline for graph indexing will be edge-cloud setup with indexing disabled on the edge. This experiment consists of 100 random queries of each type similar to the Query Partitioning experiment. The time taken to complete the local query with index and without index is measured. The outcome should be that the time taken with index should be less than the without index baseline. The effectiveness of each index for each query type will be different since problems which are NP complete like subgraph isomorphism will offer more benefit in having the index than other simple problems like vertex or edge search.
 \end{enumerate}
 
+\section{Milestones}
+
+The following are the potential deliverables for mid-term evaluation,
+
+\begin{enumerate}
+	\item Knowledge Graph partitioning will be implemented on the edge so that a local graph is determined and persisted on the edge  
+	\item Query Partitioning in the edge layer will be implemented. Given a input query, it will be divided into local and global query based on the knowledge graph partition
+	\item Edge worker will be implemented which will run local queries on the local graph data
+	\item Result Combiner will be implemented to combine results of local and global query evaluation
+	\item All the above will be done for Vertex Search, Edge Search and Reachability query types
+	\item Relevant experiments for the above items will be performed as per the setup described in the previous section 
+	\item Mid-Term report consisting of design, experiments and analysis will be submitted along with code
+\end{enumerate}
+
+The following are the deliverables for final evaluation,
+
+\begin{enumerate}
+	\item Any Feedback from mid-term evaluation will be incorporated into the project
+    \item Efficient caching (storing) of global queries and results in-memory on the edge device will be implemented. 
+    \item Statistics manager and cache replacement logic for caching will be implemented on the edge
+    \item Support for Single Source Shortest path (SSSP) query will be added on the edge
+    \item Indexing for Vertex search, Edge search and Reachability will be implemented on the edge
+    \item Remaining Experiments will be performed as described in the previous section
+    \item Final report with full conceptual design, implementation details, experiments, plots and detailed analysis will be submitted with code
+\end{enumerate}
+
+The following are the stretch goals for the project. These are definite goals and will only be accomplished as per availability of time. 
+
+\begin{enumerate}
+	\item Support for Single Source Shortest path (SSSP) query indexing in edge and cloud
+	\item Support for Subgraph isomorphism queries in both edge and cloud
+	\item Support for updating the knowledge graph from edge. (Addition, Deletion and Updating of vertices and edges)
+\end{enumerate}
 
 % trigger a \newpage just before the given reference
 % number - used to balance the columns on the last page
 % adjust value as needed - may need to be readjusted if
 % the document is modified later
-\IEEEtriggeratref{6}
+%\IEEEtriggeratref{6}
 % The "triggered" command can be changed if desired:
 %\IEEEtriggercmd{\enlargethispage{-5in}}
 

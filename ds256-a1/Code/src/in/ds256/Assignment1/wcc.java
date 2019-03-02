@@ -36,14 +36,16 @@ public class wcc {
 
         // SCHEMA : Tuple2<SourceID, TargetID>
         JavaPairRDD<Long, Long> edgeRDD = inputRDD.flatMapToPair(edge -> {
-            String[] tokens = edge.split(" ");
+            String[] tokens = edge.split("\t");
             ArrayList<Tuple2<Long, Long>> e = new ArrayList<>();
             if (tokens.length == 2) {
-                e.add(new Tuple2<> (Long.parseLong(tokens[0]), Long.parseLong(tokens[1])));
-                e.add(new Tuple2<> (Long.parseLong(tokens[1]), Long.parseLong(tokens[0])));
-                return e.iterator();
+                try {
+                    e.add(new Tuple2<> (Long.parseLong(tokens[0]), Long.parseLong(tokens[1])));
+                    e.add(new Tuple2<> (Long.parseLong(tokens[1]), Long.parseLong(tokens[0])));
+                }
+                catch (NumberFormatException n) {return e.iterator();}
             }
-            return null;
+            return e.iterator();
         });
 
         // SCHEMA : Tuple2<VertexID, Tuple3<List<NeighbourIDs>, isActive, vertexState>>
@@ -55,22 +57,24 @@ public class wcc {
             for (Tuple3<ArrayList<Long>, Boolean, Long> val : vertex._2) {
                 adjList.addAll(val._1());
             }
-            return new Tuple2<> (vertex._1, new Tuple3<> (adjList, false, vertex._1));
-        });
+            return new Tuple2<> (vertex._1, new Tuple3<> (adjList, true, vertex._1));
+        }).cache();
 
         while(!hasConverged) {
 
            // SCHEMA : Tuple2<VertexID, Tuple3<List<NeighbourIDs>, isActive, vertexState>>
            JavaPairRDD<Long, Tuple3<ArrayList<Long>, Boolean, Long>> messageRDD = vertexRDD.flatMapToPair(vertex -> {
                ArrayList<Tuple2<Long, Tuple3<ArrayList<Long>, Boolean, Long>>> m = new ArrayList<>();
-               for(Long v: vertex._2._1()) {
-                   m.add(new Tuple2<>(v, new Tuple3<>(null, true, vertex._2._3())));
+               if (vertex._2._2()) {
+                   for (Long v : vertex._2._1()) {
+                       m.add(new Tuple2<>(v, new Tuple3<>(null, true, vertex._2._3())));
+                   }
                }
                return m.iterator();
            });
 
            // SCHEMA : Tuple2<VertexID, Tuple3<List<NeighbourIDs>, isActive, vertexState>>
-           vertexRDD = vertexRDD.union(messageRDD).groupByKey().mapToPair(vertex -> {
+           vertexRDD = vertexRDD.union(messageRDD).groupByKey().repartition(32).mapToPair(vertex -> {
                Long maximumValue = 0L;
                Long currentValue = 0L;
                boolean hasChanged = false;
@@ -89,12 +93,13 @@ public class wcc {
                    currentValue = maximumValue;
                }
                return new Tuple2<>(vertex._1, new Tuple3<>(adjList, hasChanged, currentValue));
-           });
+           }).cache();
 
            hasConverged = vertexRDD.filter(vertex -> vertex._2._2()).take(1).isEmpty();
 
         }
 
+        // Write Output
         vertexRDD.mapToPair(vertex ->  new Tuple2<>(vertex._2._3(), vertex._1)).sortByKey().saveAsTextFile(outputFile);
 
         sc.stop();

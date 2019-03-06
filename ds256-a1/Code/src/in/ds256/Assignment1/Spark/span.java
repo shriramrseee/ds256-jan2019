@@ -26,7 +26,7 @@ public class span {
 		JavaSparkContext sc = new JavaSparkContext(sparkConf);
 
 		// SCHEMA : Tuple2<SourceID, TargetID>
-		JavaPairRDD<Long, Long> edgeRDD = graphReader.read(inputFile, sc, true);
+		JavaPairRDD<Long, Long> edgeRDD = graphReader.read(inputFile, sc, true, numPartitions);
 
 		// SCHEMA : Tuple2<VertexID, Tuple4<List<NeighbourIDs>, isHalted, distance, parent>>
 		JavaPairRDD<Long, Tuple4<ArrayList<Long>, Boolean, Long, Long>> vertexRDD = edgeRDD.groupByKey().mapToPair(vertex -> new Tuple2<>(vertex._1, new Tuple4<>(Lists.newArrayList(vertex._2), !(vertex._1.equals(sourceVertex)), (vertex._1.equals(sourceVertex))?0:Long.MAX_VALUE, -1L))).repartition(numPartitions).cache();

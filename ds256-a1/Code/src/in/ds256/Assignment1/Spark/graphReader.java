@@ -9,23 +9,23 @@ import java.util.ArrayList;
 
 class graphReader {
 
-    static JavaPairRDD<Long, Long> read(String inputFile, JavaSparkContext sc, boolean needUndirected) {
+    static JavaPairRDD<Long, Long> read(String inputFile, JavaSparkContext sc, boolean needUndirected, int numPartitions) {
 
         JavaPairRDD<Long, Long>  edgeRDD = null;
 
         switch (inputFile) {
-            case "hdfs:///user/ds256/a1/cit-Patents.txt": edgeRDD = readerOne(inputFile, sc, needUndirected); break;
-            case "hdfs:///user/ds256/a1/soc-livj.txt": edgeRDD = readerOne(inputFile, sc, needUndirected); break;
-            case "hdfs:///user/ds256/a1/orkut.txt": edgeRDD = readerOne(inputFile, sc, needUndirected); break;
-            case "hdfs:///user/ds256/a1/USA-road-d.USA.gr": edgeRDD = readerThree(inputFile, sc, needUndirected); break;
-            case "hdfs:///user/ds256/a1/gplus.txt": edgeRDD = readerTwo(inputFile, sc, needUndirected); break;
-            case "hdfs:///user/ds256/a1/twitter.txt": edgeRDD = readerTwo(inputFile, sc, needUndirected); break;
+            case "hdfs:///user/ds256/a1/cit-Patents.txt": edgeRDD = readerOne(inputFile, sc, needUndirected, numPartitions); break;
+            case "hdfs:///user/ds256/a1/soc-livj.txt": edgeRDD = readerOne(inputFile, sc, needUndirected, numPartitions); break;
+            case "hdfs:///user/ds256/a1/orkut.txt": edgeRDD = readerOne(inputFile, sc, needUndirected, numPartitions); break;
+            case "hdfs:///user/ds256/a1/USA-road-d.USA.gr": edgeRDD = readerThree(inputFile, sc, needUndirected, numPartitions); break;
+            case "hdfs:///user/ds256/a1/gplus.txt": edgeRDD = readerTwo(inputFile, sc, needUndirected, numPartitions); break;
+            case "hdfs:///user/ds256/a1/twitter.txt": edgeRDD = readerTwo(inputFile, sc, needUndirected, numPartitions); break;
         }
 
         return edgeRDD;
     }
 
-    private static JavaPairRDD<Long, Long> readerOne(String inputFile, JavaSparkContext sc, boolean needUndirected) {
+    private static JavaPairRDD<Long, Long> readerOne(String inputFile, JavaSparkContext sc, boolean needUndirected, int numPartitions) {
 
         JavaRDD<String> inputRDD = sc.textFile(inputFile);
 
@@ -41,10 +41,10 @@ class graphReader {
                 catch (NumberFormatException n) {return e.iterator();}
             }
             return e.iterator();
-        }).distinct();
+        }).repartition(numPartitions).distinct();
     }
 
-    private static JavaPairRDD<Long, Long> readerTwo(String inputFile, JavaSparkContext sc, boolean needUndirected) {
+    private static JavaPairRDD<Long, Long> readerTwo(String inputFile, JavaSparkContext sc, boolean needUndirected, int numPartitions) {
 
         JavaRDD<String> inputRDD = sc.textFile(inputFile);
 
@@ -60,10 +60,10 @@ class graphReader {
                 catch (NumberFormatException n) {return e.iterator();}
             }
             return e.iterator();
-        }).distinct();
+        }).repartition(numPartitions).distinct();
     }
 
-    private static JavaPairRDD<Long, Long> readerThree(String inputFile, JavaSparkContext sc, boolean needUndirected) {
+    private static JavaPairRDD<Long, Long> readerThree(String inputFile, JavaSparkContext sc, boolean needUndirected, int numPartitions) {
 
         JavaRDD<String> inputRDD = sc.textFile(inputFile);
 
@@ -79,7 +79,7 @@ class graphReader {
                 catch (NumberFormatException n) {return e.iterator();}
             }
             return e.iterator();
-        }).distinct();
+        }).repartition(numPartitions).distinct();
     }
 
 }

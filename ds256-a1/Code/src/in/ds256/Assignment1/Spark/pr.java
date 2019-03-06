@@ -27,7 +27,7 @@ public class pr {
 		JavaSparkContext sc = new JavaSparkContext(sparkConf);
 
 		// SCHEMA : Tuple2<SourceID, TargetID>
-		JavaPairRDD<Long, Long> edgeRDD = graphReader.read(inputFile, sc, false);
+		JavaPairRDD<Long, Long> edgeRDD = graphReader.read(inputFile, sc, false, numPartitions);
 
 		// SCHEMA : Tuple2<VertexID, Tuple3<List<NeighbourIDs>, PR, Old_PR>>
 		JavaPairRDD<Long, Tuple3<ArrayList<Long>, Double, Double>> vertexRDD = edgeRDD.groupByKey().mapToPair(vertex -> new Tuple2<>(vertex._1, new Tuple3<>(Lists.newArrayList(vertex._2), 0.0, 0.0))).repartition(numPartitions).cache();

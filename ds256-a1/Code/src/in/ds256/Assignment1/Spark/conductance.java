@@ -27,7 +27,7 @@ public class conductance {
         JavaSparkContext sc = new JavaSparkContext(sparkConf);
 
         // SCHEMA : Tuple2<SourceID, TargetID>
-        JavaPairRDD<Long, Long> edgeRDD = graphReader.read(inputFile, sc, true);
+        JavaPairRDD<Long, Long> edgeRDD = graphReader.read(inputFile, sc, true, numPartitions);
 
         // SCHEMA : Tuple2<VertexID, Tuple3<List<NeighbourIDs>, isSet, degree>>
         JavaPairRDD<Long, Tuple3<ArrayList<Long>, Boolean, Long>> vertexRDD = edgeRDD.groupByKey().mapToPair(vertex -> {

@@ -24,7 +24,7 @@ public class wcc {
         JavaSparkContext sc = new JavaSparkContext(sparkConf);
 
         // SCHEMA : Tuple2<SourceID, TargetID>
-        JavaPairRDD<Long, Long> edgeRDD = graphReader.read(inputFile, sc, true);
+        JavaPairRDD<Long, Long> edgeRDD = graphReader.read(inputFile, sc, true, numPartitions);
 
         // SCHEMA : Tuple2<VertexID, Tuple3<List<NeighbourIDs>, isActive, vertexState>>
         JavaPairRDD<Long, Tuple3<ArrayList<Long>, Boolean, Long>> vertexRDD = edgeRDD.groupByKey().mapToPair(vertex -> new Tuple2<>(vertex._1, new Tuple3<>(Lists.newArrayList(vertex._2), true, vertex._1))).repartition(numPartitions).cache();

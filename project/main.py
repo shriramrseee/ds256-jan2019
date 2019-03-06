@@ -20,6 +20,8 @@ from gremlin_python.process.traversal import WithOptions
 
 g = traversal().withRemote(DriverRemoteConnection('ws://10.24.24.2:8182/gremlin','g'))
 
+print g.V().count()
+
 print g.V().hasLabel('person').has('age',P.gt(30)).order().by('age',Order.desc).toList()
 
 

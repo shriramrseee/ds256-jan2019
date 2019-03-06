@@ -1,15 +1,10 @@
-package in.ds256.Assignment1;
+package in.ds256.Assignment1.Spark;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.LongStream;
-
 import com.google.common.collect.Lists;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
-import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import scala.Tuple2;
 import scala.Tuple3;
@@ -20,45 +15,19 @@ public class wcc {
 
         String inputFile = args[0]; // Should be some file on HDFS
         String outputFile = args[1]; // Should be some file on HDFS
-        Long vertexCount = Long.parseLong(args[2]); // No. of Vertices
+        int numPartitions = Integer.parseInt(args[2]); // No. of partitions
+        long iterations = 0;
 
         boolean hasConverged = false;
 
         SparkConf sparkConf = new SparkConf().setAppName("WCC");
         JavaSparkContext sc = new JavaSparkContext(sparkConf);
 
-        JavaRDD<String> inputRDD = sc.textFile(inputFile);
-
-        List<Long> vertices = LongStream.rangeClosed(1, vertexCount).boxed().collect(Collectors.toList());
-
-        // SCHEMA : Tuple2<VertexID, Tuple3<List<NeighbourIDs>, isActive, vertexState>>
-        JavaPairRDD<Long, Tuple3<ArrayList<Long>, Boolean, Long>> vertexRDD = sc.parallelize(vertices).mapToPair(vertex -> new Tuple2<>(vertex, new Tuple3<>(new ArrayList<>(), true, vertex)));
-
         // SCHEMA : Tuple2<SourceID, TargetID>
-        JavaPairRDD<Long, Long> edgeRDD = inputRDD.flatMapToPair(edge -> {
-            String[] tokens = edge.split("\t");
-            ArrayList<Tuple2<Long, Long>> e = new ArrayList<>();
-            if (tokens.length == 2) {
-                try {
-                    e.add(new Tuple2<> (Long.parseLong(tokens[0]), Long.parseLong(tokens[1])));
-                    e.add(new Tuple2<> (Long.parseLong(tokens[1]), Long.parseLong(tokens[0])));
-                }
-                catch (NumberFormatException n) {return e.iterator();}
-            }
-            return e.iterator();
-        });
+        JavaPairRDD<Long, Long> edgeRDD = graphReader.read(inputFile, sc, true);
 
         // SCHEMA : Tuple2<VertexID, Tuple3<List<NeighbourIDs>, isActive, vertexState>>
-        JavaPairRDD<Long, Tuple3<ArrayList<Long>, Boolean, Long>> adjRDD = edgeRDD.groupByKey().mapToPair(vertex -> new Tuple2<>(vertex._1, new Tuple3<>(Lists.newArrayList(vertex._2), true, vertex._1)));
-
-        // SCHEMA : Tuple2<VertexID, Tuple3<List<NeighbourIDs>, isActive, vertexState>>
-        vertexRDD = vertexRDD.union(adjRDD).groupByKey().mapToPair(vertex -> {
-            ArrayList<Long> adjList = new ArrayList<>();
-            for (Tuple3<ArrayList<Long>, Boolean, Long> val : vertex._2) {
-                adjList.addAll(val._1());
-            }
-            return new Tuple2<> (vertex._1, new Tuple3<> (adjList, true, vertex._1));
-        }).cache();
+        JavaPairRDD<Long, Tuple3<ArrayList<Long>, Boolean, Long>> vertexRDD = edgeRDD.groupByKey().mapToPair(vertex -> new Tuple2<>(vertex._1, new Tuple3<>(Lists.newArrayList(vertex._2), true, vertex._1))).repartition(numPartitions).cache();
 
         while(!hasConverged) {
 
@@ -74,7 +43,7 @@ public class wcc {
            });
 
            // SCHEMA : Tuple2<VertexID, Tuple3<List<NeighbourIDs>, isActive, vertexState>>
-           vertexRDD = vertexRDD.union(messageRDD).groupByKey().repartition(32).mapToPair(vertex -> {
+           vertexRDD = vertexRDD.union(messageRDD).groupByKey().repartition(numPartitions).mapToPair(vertex -> {
                Long maximumValue = 0L;
                Long currentValue = 0L;
                boolean hasChanged = false;
@@ -97,10 +66,14 @@ public class wcc {
 
            hasConverged = vertexRDD.filter(vertex -> vertex._2._2()).take(1).isEmpty();
 
+           iterations++;
+
         }
 
         // Write Output
         vertexRDD.mapToPair(vertex ->  new Tuple2<>(vertex._2._3(), vertex._1)).sortByKey().saveAsTextFile(outputFile);
+
+        System.out.println("Logger: Shriram.Ramesh - Iterations: " + iterations);
 
         sc.stop();
         sc.close();

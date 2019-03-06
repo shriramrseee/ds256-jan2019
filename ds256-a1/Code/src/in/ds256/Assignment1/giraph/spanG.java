@@ -1,4 +1,4 @@
-package in.ds256.Assignment1;
+package in.ds256.Assignment1.Giraph;
 
 import org.apache.giraph.graph.BasicComputation;
 import org.apache.giraph.edge.Edge;

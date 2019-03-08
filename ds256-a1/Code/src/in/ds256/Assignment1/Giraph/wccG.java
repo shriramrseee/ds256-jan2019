@@ -5,42 +5,55 @@ import org.apache.giraph.edge.Edge;
 import org.apache.giraph.edge.EdgeFactory;
 import org.apache.giraph.graph.Vertex;
 import org.apache.hadoop.io.NullWritable;
-import org.apache.hadoop.io.IntWritable;
-import org.apache.log4j.Logger;
+import org.apache.hadoop.io.LongWritable;
 
 import java.io.IOException;
 
-public class wccG extends BasicComputation<IntWritable, IntWritable, NullWritable, IntWritable> {
+public class wccG extends BasicComputation<LongWritable, LongWritable, NullWritable, LongWritable> {
 
     @Override
-    public void compute(Vertex<IntWritable, IntWritable, NullWritable> vertex, Iterable<IntWritable> messages) throws IOException {
+    public void compute(Vertex<LongWritable, LongWritable, NullWritable> vertex, Iterable<LongWritable> messages) throws IOException {
 
-        if (getSuperstep() == 0) {
-            vertex.setValue(vertex.getId());
 
-            for (Edge<IntWritable, NullWritable> edge : vertex.getEdges()) {
-                addEdgeRequest(edge.getTargetVertexId(), EdgeFactory.create(vertex.getId(), null));
+        if(vertex.getId().get() == -1L) {
+            vertex.voteToHalt();
+        }
+        else if (getSuperstep() == 0) {
+            for (Edge<LongWritable, NullWritable> edge : vertex.getEdges()) {
+                sendMessage(edge.getTargetVertexId(), vertex.getId());
             }
         }
-        else if(getSuperstep() == 1) {
-            for (Edge<IntWritable, NullWritable> edge : vertex.getEdges()) {
+        else if (getSuperstep() == 1) {
+            vertex.setValue(vertex.getId());
+
+            int replicate = Integer.parseInt(getContext().getConfiguration().get("replicate"));
+
+            if(replicate==1) {
+                for (Edge<LongWritable, NullWritable> edge : vertex.getEdges()) {
+                    addEdgeRequest(edge.getTargetVertexId(), EdgeFactory.create(vertex.getId()));
+                }
+            }
+        }
+        else if (getSuperstep() == 2) {
+
+            for (Edge<LongWritable, NullWritable> edge : vertex.getEdges()) {
                 sendMessage(edge.getTargetVertexId(), vertex.getId());
             }
 
             vertex.voteToHalt();
         }
-        else{
-            int maxValue = 0;
+        else {
+            long maxValue = vertex.getValue().get();
 
-            for (IntWritable message : messages) {
+            for (LongWritable message : messages) {
                 maxValue = Math.max(maxValue, message.get());
             }
 
             if (maxValue > vertex.getValue().get()) {
-                vertex.setValue(new IntWritable(maxValue));
+                vertex.setValue(new LongWritable(maxValue));
 
-                for (Edge<IntWritable, NullWritable> edge : vertex.getEdges()) {
-                    sendMessage(edge.getTargetVertexId(), new IntWritable(maxValue));
+                for (Edge<LongWritable, NullWritable> edge : vertex.getEdges()) {
+                    sendMessage(edge.getTargetVertexId(), new LongWritable(maxValue));
                 }
             }
 

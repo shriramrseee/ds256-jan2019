@@ -29,8 +29,8 @@ public class wccG extends BasicComputation<LongWritable, LongWritable, NullWrita
             int replicate = Integer.parseInt(getContext().getConfiguration().get("replicate"));
 
             if(replicate==1) {
-                for (Edge<LongWritable, NullWritable> edge : vertex.getEdges()) {
-                    addEdgeRequest(edge.getTargetVertexId(), EdgeFactory.create(vertex.getId()));
+                for (LongWritable message : messages) {
+                    vertex.addEdge(EdgeFactory.create(new LongWritable(message.get())));
                 }
             }
         }

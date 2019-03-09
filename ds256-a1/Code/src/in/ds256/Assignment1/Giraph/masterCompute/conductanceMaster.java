@@ -23,7 +23,7 @@ public class conductanceMaster extends MasterCompute {
             setAggregatedValue("OutDegree", new LongWritable(0));
             setAggregatedValue("crossEdges", new LongWritable(0));
         }
-        else if(getSuperstep() == 4) {
+        else if(getSuperstep() == 5) {
             long inDegree = ((LongWritable) getAggregatedValue("InDegree")).get();
             long outDegree = ((LongWritable) getAggregatedValue("outDegree")).get();
             long crossEdges = ((LongWritable) getAggregatedValue("crossEdges")).get();

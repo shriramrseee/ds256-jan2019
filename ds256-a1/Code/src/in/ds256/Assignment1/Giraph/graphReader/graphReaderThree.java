@@ -1,5 +1,6 @@
 package in.ds256.Assignment1.Giraph.graphReader;
 
+import in.ds256.Assignment1.Giraph.payLoad.LongPair;
 import org.apache.giraph.io.EdgeReader;
 import org.apache.giraph.io.formats.TextEdgeInputFormat;
 import org.apache.hadoop.io.LongWritable;

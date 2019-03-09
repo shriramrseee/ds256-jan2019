@@ -3,37 +3,37 @@ package in.ds256.Assignment1.Giraph;
 import org.apache.giraph.edge.Edge;
 import org.apache.giraph.edge.EdgeFactory;
 import org.apache.giraph.graph.BasicComputation;
-import org.apache.giraph.master.MasterCompute;
 import org.apache.giraph.graph.Vertex;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.BooleanWritable;
 import org.apache.hadoop.io.NullWritable;
-import org.apache.giraph.aggregators.LongSumAggregator;
-
-import java.io.DataInput;
-import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Random;
 
-public class conductanceG extends BasicComputation<LongWritable, BooleanWritable, NullWritable, BooleanWritable> {
+public class conductanceG extends BasicComputation<LongWritable, BooleanWritable, NullWritable, LongWritable> {
 
     @Override
-    public void compute(Vertex<LongWritable, BooleanWritable, NullWritable> vertex, Iterable<BooleanWritable> messages) throws IOException {
+    public void compute(Vertex<LongWritable, BooleanWritable, NullWritable> vertex, Iterable<LongWritable> messages) throws IOException {
 
         if (vertex.getId().get() == -1L) {
             vertex.voteToHalt();
         }
         else if (getSuperstep() == 0) {
+            for (Edge<LongWritable, NullWritable> edge : vertex.getEdges()) {
+                sendMessage(edge.getTargetVertexId(), vertex.getId());
+            }
+        }
+        else if (getSuperstep() == 1) {
 
             int replicate = Integer.parseInt(getContext().getConfiguration().get("replicate"));
 
-            if (replicate == 1) {
-                for (Edge<LongWritable, NullWritable> edge : vertex.getEdges()) {
-                    addEdgeRequest(edge.getTargetVertexId(), EdgeFactory.create(vertex.getId()));
+            if(replicate==1) {
+                for (LongWritable message : messages) {
+                    vertex.addEdge(EdgeFactory.create(new LongWritable(message.get())));
                 }
             }
         }
-        else if(getSuperstep() == 1) {
+        else if(getSuperstep() == 2) {
 
             Random rand = new Random();
             long degree = 0L;
@@ -49,15 +49,15 @@ public class conductanceG extends BasicComputation<LongWritable, BooleanWritable
             }
 
         }
-        else if(getSuperstep() == 2) {
+        else if(getSuperstep() == 3) {
             for (Edge<LongWritable, NullWritable> edge : vertex.getEdges()) {
-                sendMessage(edge.getTargetVertexId(), vertex.getValue());
+                sendMessage(edge.getTargetVertexId(), new LongWritable(vertex.getValue().get()?1L:0L));
             }
         }
-        else if(getSuperstep() == 3) {
+        else if(getSuperstep() == 4) {
             long count = 0L;
-            for (BooleanWritable message : messages) {
-                if (message.get() ^ vertex.getValue().get()) {
+            for (LongWritable message : messages) {
+                if ((message.get() == 1L) ^ vertex.getValue().get()) {
                     count++;
                 }
             }

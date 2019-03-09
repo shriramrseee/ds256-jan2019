@@ -1,6 +1,6 @@
-package in.ds256.Assignment1.Giraph.graphReader;
+package in.ds256.Assignment1.Giraph.payLoad;
 
-class LongPair {
+public class LongPair {
     private long first;
     private long second;
 

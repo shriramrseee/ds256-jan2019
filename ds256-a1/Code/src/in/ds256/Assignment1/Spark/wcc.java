@@ -43,7 +43,7 @@ public class wcc {
            });
 
            // SCHEMA : Tuple2<VertexID, Tuple3<List<NeighbourIDs>, isActive, vertexState>>
-           vertexRDD = vertexRDD.union(messageRDD).groupByKey().repartition(numPartitions).mapToPair(vertex -> {
+           vertexRDD = vertexRDD.union(messageRDD).groupByKey().coalesce(numPartitions).mapToPair(vertex -> {
                Long maximumValue = 0L;
                Long currentValue = 0L;
                boolean hasChanged = false;

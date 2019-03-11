@@ -48,7 +48,7 @@ public class pr {
 			});
 
 			// SCHEMA : Tuple2<VertexID, Tuple3<List<NeighbourIDs>, PR, Old_PR>>
-			vertexRDD = vertexRDD.union(messageRDD).groupByKey().repartition(numPartitions).mapToPair(vertex -> {
+			vertexRDD = vertexRDD.union(messageRDD).groupByKey().coalesce(numPartitions).mapToPair(vertex -> {
 				Double sum = 0.0;
 				Double pr = 0.0;
 				Double old_pr;

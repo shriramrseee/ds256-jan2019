@@ -43,7 +43,7 @@ public class span {
 			});
 
 			// SCHEMA : Tuple2<VertexID, Tuple4<List<NeighbourIDs>, isHalted, distance, parent>>
-			vertexRDD = vertexRDD.union(messageRDD).groupByKey().repartition(numPartitions).mapToPair(vertex -> {
+			vertexRDD = vertexRDD.union(messageRDD).groupByKey().coalesce(numPartitions).mapToPair(vertex -> {
 				Long minimumValue = Long.MAX_VALUE;
 				Long parentVertex = -1L;
 				Long currentValue = 0L;

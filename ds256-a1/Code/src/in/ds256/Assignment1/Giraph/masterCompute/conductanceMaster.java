@@ -25,7 +25,7 @@ public class conductanceMaster extends MasterCompute {
         }
         else if(getSuperstep() == 5) {
             long inDegree = ((LongWritable) getAggregatedValue("InDegree")).get();
-            long outDegree = ((LongWritable) getAggregatedValue("outDegree")).get();
+            long outDegree = ((LongWritable) getAggregatedValue("OutDegree")).get();
             long crossEdges = ((LongWritable) getAggregatedValue("crossEdges")).get();
             double conductance;
             long m = (inDegree < outDegree) ? inDegree : outDegree;

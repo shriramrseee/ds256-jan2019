@@ -45,13 +45,14 @@ public class conductanceG extends BasicComputation<LongWritable, BooleanWritable
                 aggregate("InDegree", new LongWritable(degree));
             }
             else {
-                aggregate("InDegree", new LongWritable(degree));
+                aggregate("OutDegree", new LongWritable(degree));
             }
 
         }
         else if(getSuperstep() == 3) {
             for (Edge<LongWritable, NullWritable> edge : vertex.getEdges()) {
-                sendMessage(edge.getTargetVertexId(), new LongWritable(vertex.getValue().get()?1L:0L));
+                if (edge.getTargetVertexId().get() < vertex.getId().get())
+                    sendMessage(edge.getTargetVertexId(), new LongWritable(vertex.getValue().get()?1L:0L));
             }
         }
         else if(getSuperstep() == 4) {

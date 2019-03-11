@@ -32,6 +32,10 @@ public class LongTupleWritable implements Writable {
     public String toString() {
         String strings = new String();
 
+        if (this.values == null) {
+            return strings;
+        }
+
         for(int i = 0; i < this.values.length; ++i) {
             strings = strings.concat(this.values[i].toString());
             strings = strings.concat(",");

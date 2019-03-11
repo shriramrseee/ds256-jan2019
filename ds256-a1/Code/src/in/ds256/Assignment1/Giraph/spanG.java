@@ -43,9 +43,9 @@ public class spanG extends BasicComputation<LongWritable, LongTupleWritable, Nul
             vertex.setValue(new LongTupleWritable(val));
 
             if (val[0].get() < Long.MAX_VALUE) {
-                val[1] = vertex.getId();
+                LongWritable[] new_val = {new LongWritable(val[0].get()), vertex.getId()};
                 for (Edge<LongWritable, NullWritable> edge : vertex.getEdges()) {
-                    sendMessage(edge.getTargetVertexId(), new LongTupleWritable(val));
+                    sendMessage(edge.getTargetVertexId(), new LongTupleWritable(new_val));
                 }
             }
 
@@ -69,10 +69,10 @@ public class spanG extends BasicComputation<LongWritable, LongTupleWritable, Nul
 
                 LongWritable[] val = {new LongWritable(dis), new LongWritable(parent)};
                 vertex.setValue(new LongTupleWritable(val));
-                val[1] = vertex.getId();
+                LongWritable[] new_val = {new LongWritable(val[0].get()), vertex.getId()};
 
                 for (Edge<LongWritable, NullWritable> edge : vertex.getEdges()) {
-                    sendMessage(edge.getTargetVertexId(), new LongTupleWritable(val));
+                    sendMessage(edge.getTargetVertexId(), new LongTupleWritable(new_val));
                 }
 
             }

@@ -30,7 +30,14 @@ public class pr {
 		JavaPairRDD<Long, Long> edgeRDD = graphReader.read(inputFile, sc, false, numPartitions);
 
 		// SCHEMA : Tuple2<VertexID, Tuple3<List<NeighbourIDs>, PR, Old_PR>>
-		JavaPairRDD<Long, Tuple3<ArrayList<Long>, Double, Double>> vertexRDD = edgeRDD.groupByKey().mapToPair(vertex -> new Tuple2<>(vertex._1, new Tuple3<>(Lists.newArrayList(vertex._2), 0.0, 0.0))).repartition(numPartitions).cache();
+		JavaPairRDD<Long, Tuple3<ArrayList<Long>, Double, Double>> vertexRDD = edgeRDD.groupByKey().mapToPair(vertex ->  {
+			ArrayList<Long> adj = new ArrayList<>();
+			for(Long v : vertex._2) {
+				if (!v.equals(vertex._1))
+					adj.add(v);
+			}
+			return new Tuple2<>(vertex._1, new Tuple3<>(adj, 0.0, 0.0));
+		}).repartition(numPartitions).cache();
 
 		long vertexCount = vertexRDD.count();
 

@@ -23,48 +23,44 @@ public class prG extends BasicComputation<LongWritable, DoubleTupleWritable, Nul
                 sendMessage(edge.getTargetVertexId(), new DoubleWritable(1.0));
             }
         }
-        else if (getSuperstep() == 1) {
+        else if(getSuperstep() == 1) {
+            // Do nothing
+        }
+        else if (getSuperstep() == 2) {
 
             // [OldPR, NewPR]
-            DoubleWritable[] pr = {new DoubleWritable(1000.0), new DoubleWritable(1.0 / getTotalNumVertices())};
+            DoubleWritable[] pr = {new DoubleWritable(1000.0), new DoubleWritable(1.0 / (getTotalNumVertices()-1))};
 
             vertex.setValue(new DoubleTupleWritable(pr));
 
             for (Edge<LongWritable, NullWritable> edge : vertex.getEdges()) {
-                sendMessage(edge.getTargetVertexId(), (DoubleWritable) vertex.getValue().get()[1]);
+                sendMessage(edge.getTargetVertexId(), new DoubleWritable(((DoubleWritable) vertex.getValue().get()[1]).get()/vertex.getNumEdges()));
             }
 
         } else {
-            Double oldPR = ((DoubleWritable) vertex.getValue().get()[0]).get();
-            Double newPR = ((DoubleWritable) vertex.getValue().get()[1]).get();
-            double tolerance = Double.parseDouble(getContext().getConfiguration().get("tolerance"));
+            double oldPR = ((DoubleWritable) vertex.getValue().get()[0]).get();
+            double newPR = ((DoubleWritable) vertex.getValue().get()[1]).get();
             double weight = Double.parseDouble(getContext().getConfiguration().get("weight"));
 
-            if (Math.abs(newPR - oldPR) / oldPR < tolerance)
-                vertex.voteToHalt();
-            else {
+            double sum = 0.0;
 
-                double sum = 0.0;
-
-                for (DoubleWritable message : messages) {
-                    sum += message.get();
-                }
-
-                oldPR = newPR;
-                newPR = weight * sum + (1-weight) * (1.0 / getTotalNumVertices());
-
-                DoubleWritable[] pr = {new DoubleWritable(oldPR), new DoubleWritable(newPR)};
-
-                vertex.setValue(new DoubleTupleWritable(pr));
-
-                for (Edge<LongWritable, NullWritable> edge : vertex.getEdges()) {
-                    sendMessage(edge.getTargetVertexId(), (DoubleWritable) vertex.getValue().get()[1]);
-                }
-
-                if (Math.abs(newPR - oldPR) / oldPR < tolerance)
-                    vertex.voteToHalt();
-
+            for (DoubleWritable message : messages) {
+                sum += message.get();
             }
+
+            oldPR = newPR;
+            newPR = weight * sum + (1-weight) * (1.0 / (getTotalNumVertices()-1));
+
+            DoubleWritable[] pr = {new DoubleWritable(oldPR), new DoubleWritable(newPR)};
+
+            vertex.setValue(new DoubleTupleWritable(pr));
+
+            for (Edge<LongWritable, NullWritable> edge : vertex.getEdges()) {
+                sendMessage(edge.getTargetVertexId(), new DoubleWritable(newPR /vertex.getNumEdges()));
+            }
+
+            aggregate("relDiff", new DoubleWritable(Math.abs(newPR - oldPR)/oldPR));
+            aggregate("sumPR", new DoubleWritable(newPR));
 
         }
 

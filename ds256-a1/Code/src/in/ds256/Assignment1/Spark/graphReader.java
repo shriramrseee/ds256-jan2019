@@ -37,6 +37,8 @@ class graphReader {
                     e.add(new Tuple2<> (Long.parseLong(tokens[0]), Long.parseLong(tokens[1])));
                     if (needUndirected)
                         e.add(new Tuple2<> (Long.parseLong(tokens[1]), Long.parseLong(tokens[0])));
+                    else
+                        e.add(new Tuple2<> (Long.parseLong(tokens[1]), Long.parseLong(tokens[1])));
                 }
                 catch (NumberFormatException n) {return e.iterator();}
             }
@@ -56,6 +58,8 @@ class graphReader {
                     e.add(new Tuple2<> (Long.parseLong(tokens[0]), Long.parseLong(tokens[1])));
                     if (needUndirected)
                         e.add(new Tuple2<> (Long.parseLong(tokens[1]), Long.parseLong(tokens[0])));
+                    else
+                        e.add(new Tuple2<> (Long.parseLong(tokens[1]), Long.parseLong(tokens[1])));
                 }
                 catch (NumberFormatException n) {return e.iterator();}
             }
@@ -75,6 +79,8 @@ class graphReader {
                     e.add(new Tuple2<> (Long.parseLong(tokens[1]), Long.parseLong(tokens[2])));
                     if (needUndirected)
                         e.add(new Tuple2<> (Long.parseLong(tokens[2]), Long.parseLong(tokens[1])));
+                    else
+                        e.add(new Tuple2<> (Long.parseLong(tokens[2]), Long.parseLong(tokens[2])));
                 }
                 catch (NumberFormatException n) {return e.iterator();}
             }

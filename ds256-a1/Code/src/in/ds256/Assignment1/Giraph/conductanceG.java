@@ -36,16 +36,12 @@ public class conductanceG extends BasicComputation<LongWritable, BooleanWritable
         else if(getSuperstep() == 2) {
 
             Random rand = new Random();
-            long degree = 0L;
-            for (Edge<LongWritable, NullWritable> edge : vertex.getEdges()) {
-                degree++;
-            }
             vertex.setValue(new BooleanWritable(rand.nextInt(1000) % 3 == 0));
             if (vertex.getValue().get()) {
-                aggregate("InDegree", new LongWritable(degree));
+                aggregate("InDegree", new LongWritable(vertex.getNumEdges()));
             }
             else {
-                aggregate("OutDegree", new LongWritable(degree));
+                aggregate("OutDegree", new LongWritable(vertex.getNumEdges()));
             }
 
         }

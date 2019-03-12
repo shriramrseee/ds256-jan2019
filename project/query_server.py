@@ -42,5 +42,13 @@ def query_server(query):
         return result
 
     elif query.type == 'edge_search':
-        result = []
+        # Get query parameters
+        has_label = query.filter.pop('has_label')
+        attribute = query.filter['has'][0]
+        predicate = filter_pred[query.filter['has'][1]](query.filter['has'][2])
+        order_by = query.sort['attribute']
+        order = sort_orders[query.sort['order']]
+
+        # Execute query
+        result = g.E().hasLabel(has_label).has(attribute, predicate).order().by(order_by, order).toList()
         return result

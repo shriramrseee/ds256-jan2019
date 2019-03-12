@@ -17,6 +17,10 @@ class query:
         self.filter = input_query['filter']
         self.sort = input_query['sort']
 
+    def load_edge_search(self, input_query):
+        self.filter = input_query['filter']
+        self.sort = input_query['sort']
+
 
 def process_input_query(input_query):
     """
@@ -31,6 +35,8 @@ def process_input_query(input_query):
 
     if q.type == 'vertex_search':
         q.load_vertex_search(input_query)
+    elif q.type == 'edge_search':
+        q.load_edge_search(input_query)
 
     # Execute Local query
 

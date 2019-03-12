@@ -1,0 +1,11 @@
+{
+  "type": "edge_search",
+  "filter": {
+    "has_label" : "created",
+    "has" : ["weight", "eq", 0.4]
+  },
+  "sort": {
+    "order": "desc",
+    "attribute": "weight"
+  }
+}

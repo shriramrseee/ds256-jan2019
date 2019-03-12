@@ -39,6 +39,7 @@ def query_server(query):
 
         # Execute query
         result = g.V().hasLabel(has_label).has(attribute, predicate).order().by(order_by, order).toList()
+        result = {v.id for v in result}
         return result
 
     elif query.type == 'edge_search':
@@ -51,4 +52,5 @@ def query_server(query):
 
         # Execute query
         result = g.E().hasLabel(has_label).has(attribute, predicate).order().by(order_by, order).toList()
+        result = {e.id for e in result}
         return result

@@ -24,9 +24,9 @@ from input_query import process_input_query
 #     process_input_query(query)
 
 
-# with open("sample_queries/edge_search.json", "rb") as f:
-#     query = f.read()
-#     process_input_query(query)
+with open("sample_queries/edge_search.json", "rb") as f:
+    query = f.read()
+    process_input_query(query)
 
 # g = traversal().withRemote(DriverRemoteConnection('ws://10.24.24.2:8182/gremlin', 'g'))
 
@@ -49,9 +49,9 @@ from input_query import process_input_query
 #         # prop[i] = p[i][0].value
 
 
-from local_graph import fetch_store_local_graph
-
-fetch_store_local_graph(3,3)
+# from local_graph import fetch_store_local_graph
+#
+# fetch_store_local_graph(3,3)
 
 
 

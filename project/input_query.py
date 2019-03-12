@@ -1,5 +1,7 @@
+import copy
 import json
 
+from query_local import query_local
 from query_server import query_server
 
 
@@ -38,12 +40,9 @@ def process_input_query(input_query):
     elif q.type == 'edge_search':
         q.load_edge_search(input_query)
 
-    # Execute Local query
-
     # Execute Remote query
-    remote_result = query_server(q)
+    remote_result = query_server(copy.deepcopy(q))
+    # Execute Local query
+    local_result = query_local(copy.deepcopy(q))
 
-    print remote_result
-
-
-
+    print local_result, remote_result

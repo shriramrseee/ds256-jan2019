@@ -25,7 +25,7 @@ class local_vertex:
     Local vertex class
     """
 
-    def __init__(self, id, label, prop):
+    def __init__(self, id=None, label=None, prop=None):
         self.id = id
         self.label = label
         self.prop = prop
@@ -33,12 +33,18 @@ class local_vertex:
     def __dict__(self):
         return {'id': self.id, 'label': self.label, 'prop': self.prop}
 
+    def load_from_json(self, j):
+        self.id = j['id']
+        self.label = j['label']
+        self.prop = j['prop']
+
+
 class local_edge:
     """
     Local edge class
     """
 
-    def __init__(self, id, label, prop, inV, outV):
+    def __init__(self, id=None, label=None, prop=None, inV=None, outV=None):
         self.id = id
         self.label = label
         self.prop = prop
@@ -47,6 +53,13 @@ class local_edge:
 
     def __dict__(self):
         return {'id': self.id, 'label': self.label, 'prop': self.prop, 'inV': self.inV, 'outV': self.outV}
+
+    def load_from_json(self, j):
+        self.id = j['id']
+        self.label = j['label']
+        self.prop = j['prop']
+        self.inV = j['inV']
+        self.outV = j['outV']
 
 
 def fetch_store_local_graph(id, hops=3):
@@ -92,3 +105,27 @@ def fetch_store_local_graph(id, hops=3):
     with open("local_data/edges.json", 'wb') as f:
         f.write(edges)
 
+
+def read_local_graph():
+    """
+    Reads local graph JSON and returns vertex and edge list
+    :return:
+    """
+    vertices = []
+    edges = []
+
+    with open("local_data/vertices.json", 'rb') as f:
+        data = json.load(f)
+        for v in data:
+            t = local_vertex()
+            t.load_from_json(v)
+            vertices.append(t)
+
+    with open("local_data/edges.json", 'rb') as f:
+        data = json.load(f)
+        for e in data:
+            t = local_edge()
+            t.load_from_json(e)
+            edges.append(t)
+
+    return [vertices, edges]

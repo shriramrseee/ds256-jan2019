@@ -20,16 +20,16 @@ runGiraphJob.sh /home/shriramr/Assignment1-1.0-SNAPSHOT-jar-with-dependencies.ja
 runGiraphJob.sh /home/shriramr/Assignment1-1.0-SNAPSHOT-jar-with-dependencies.jar in.ds256.Assignment1.Giraph.spanG "--workers 7 -eif in.ds256.Assignment1.Giraph.graphReader.graphReaderOne -eip /user/ds256/a1/orkut.txt -vof org.apache.giraph.io.formats.IdWithValueTextOutputFormat -op /user/shriramr/giraph/gow11.txt -ca giraph.pure.yarn.job=true,giraph.metrics.enable=true,giraph.metrics.directory=/user/shriramr/giraph/metricsw11.txt,giraph.logLevel=debug,sourceId=1,replicate=1 -yh 12000"
 
 
-for i in {0..11}
+for i in {0 2 3 5 8 9 11}
 do
-  hdfs dfs -ls /user/shriramr/giraph/metrics$i.txt | wc -l
+  hdfs dfs -ls /user/shriramr/giraph/metricsw$i.txt | wc -l
 done
 
-cat t | while read line
+cat t1 | while read line
 do
    getYarnLog.sh $line > temp
    a=$(cat temp | grep "compute all partitions" | tr '\n' ' ' | sed -e 's/[^0-9]/ /g' -e 's/^ *//g' -e 's/ *$//g' | tr -s ' ' | sed 's/ /\n/g' | awk '{ total += $1; count++ } END { print total/count }')
    b=$(cat temp | grep "network communication time" | tr '\n' ' ' | sed -e 's/[^0-9]/ /g' -e 's/^ *//g' -e 's/ *$//g' | tr -s ' ' | sed 's/ /\n/g' | awk '{ total += $1; count++ } END { print total/count }')
    c=$(cat temp | grep "superstep time" | tr '\n' ' ' | sed -e 's/[^0-9]/ /g' -e 's/^ *//g' -e 's/ *$//g' | tr -s ' ' | sed 's/ /\n/g' | awk '{ total += $1; count++ } END { print total/count }')
-   echo $a $b $c >> temp1
+   echo $a $b $c >> temp2
 done

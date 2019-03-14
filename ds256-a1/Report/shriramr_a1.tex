@@ -25,10 +25,10 @@
 	This is an iterative algorithm which converges once all the vertices in each weakly connected component reach the same value. The graphs were processed as undirected for this algorithm. The no. of steps would be roughly the diameter of the undirected graph.
 	
 	\subsection{Conductance [2]}
-	This is the only single pass algorithm out of all four. The graphs were processed as undirected. In each execution, approximately $\frac{1}{3}^{rd}$ of the vertices were marked as IN in random fashion and the remaining were marked as OUT. This is to avoid a input vertex list for the experiments.
+	This is the only non-iterative algorithm out of all four. The graphs were processed as undirected. In each execution, approximately $\frac{1}{3}^{rd}$ of the vertices were marked as IN in random fashion and the remaining were marked as OUT. This is to avoid a input vertex list for the experiments.
 	
 	\subsection{PageRank [3]}
-	This algorithm is iterative and is made to run till convergence. The tolerance was set to $1\%$ and the weight was set to $0.85$ for all the experiments. The graphs were treated as directed graph. The no of iterations depend on the structure of the graph and it is guaranteed to converge. 
+	This algorithm is iterative and is made to run till convergence. The tolerance was set to $1\%$ and the weight was set to $0.85$ for all the experiments. The graphs were treated as directed graph. The no. of iterations depend on the structure of the graph and it is guaranteed to converge. 
 	
 	\subsection{Spanning Tree [4]}
 	This algorithm is also iterative and runs till the spanning tree is formed. The graphs were processed as undirected and a source vertex (Vertex ID = 1) is given as input to start the spanning tree search. The no. of iterations should be close to that of weakly connected components.
@@ -98,7 +98,7 @@
     
     Another interesting observation is that the I/O time is fairly equal to compute time in most of the cases. This motivates the need for using combiners to reduce the no. of messages transferred across the nodes. Also, graph partitioning plays an important role in reducing the no. of internode messages by reducing the no. of edge cuts. Hash partitioning used in this case does not optimize for edge cuts.
     
-    Across the different datasets, the time taken does not propotionally varies in interms of no. of edges or vertices for the same algorithm and configuration. 
+    Across the different datasets, the time taken does not proportionally varies in terms of no. of edges or vertices for the same algorithm and configuration. 
     
     \subsection{Giraph - Weak Scaling}
     
@@ -114,11 +114,56 @@
     \end{center}
 
     It can be observed that the system shows weak scaling for all algorithms. The scaling efficieny indicates that it is superlinear. This is because that graphs used for each worker count is different in terms of degree distribution, diameter, topology etc. all of which could affect the time taken in addition to the edge count.
+    
+    An ideal weak scaling experiment should have had similar graph structure for all no. of workers which could be possible by using synthetically generated graphs.
+    
+    \subsection{Spark - Strong Scaling}
+    
+    The strong scaling experiments were run for 4, 5, 6 and 7 workers with each worker having 3 cores allocated to them. There were issues related to nodes becoming unavailable due to full space in /tmp folder. Therefore only a limited set of experiments were run and completed successfully.
+    
+    The figures below summarize the total time taken and the scaling efficiency computed using the formula given in previous sections. The X-axis and Y-axis have similar interpretation.
+    
+    \begin{center}
+    	\includegraphics[scale=0.5]{5.png} \\
+    	Figure 5 - Spark - CITP - Strong Scaling	
+    \end{center}
+
+    \begin{center}
+    	\includegraphics[scale=0.5]{6.png} \\
+    	Figure 6 - Spark - LIVJ - Strong Scaling	
+    \end{center}
+
+    It can be observed that Spark version generally takes more time to complete than Giraph for comparable set of resources. This is due to the programming model which is not designed for iterative graph algorithms like WCC, PR etc. and is expected.
+    
+    The scaling efficiency is less for all algorithms except conductance which shows superlinear speedup in some cases. This anomaly could be explained by Conductance being a non-iterative algorithm.
+    
+    In general, the Spark version does not show strong scaling especially with iterative algorithms which is as expected. Some anomalies with respect to time can be explained by the recomputation of RDDs multiple time due to lost nodes.
+    
+
+    \begin{center}
+    	\includegraphics[scale=0.5]{7.png} \\
+    	Figure 7 - Spark - ORKUT - Strong Scaling	
+    \end{center}
+
+   \subsection{Spark - Weak Scaling}
+   
+   Weak scaling experiments were not performed due to time constraints and cluster issues. The hypothesis is that the Spark implementation should scale weakly for all the algorithms.
+   
+   \section{Additional Notes}
+   Sample commands to run all the programs with relevant command line arguments is available in the Log file along the Job IDs of all executions. No additional library other than the ones specified by default were used as part of the code. Some of the ideas in Spark code with respect construction of RDDs were derived from example code covered in tutorial. Addition online resources are referenced below from which information about Giraph and Spark APIs were obtained.
+    
         
     \section{References}
-    \begin{list}{}{}
-    	\item
-    	\item
-    \end{list}  
+    \begin{enumerate}{}{}
+    	\item Optimizing Graph Algorithms on Pregellike Systems, Semih Salihoglu, et al.
+    	\item Tech Report: Compiling GreenMarl into GPS, Sungpack Hong, et al.
+    	\item Pregel: A System for Large-Scale Graph Processing, Grzegorz Malewicz, et al.
+    	\item Pregel Algorithms for Graph Connectivity Problems with Performance Guarantees, Da Yan, et al.
+    	\item https://spark.apache.org/docs/latest/api/java/index.html
+    	\item http://giraph.apache.org/options.html
+    	\item http://giraph.apache.org/apidocs/index.html
+    	\item https://www.sharcnet.ca/help/index.php/Measuring\_Parallel\_Scaling\_Performance\#Calculating
+    	      \_Strong\_Scaling\_Efficiency
+    \end{enumerate}  
     
 \end{document}

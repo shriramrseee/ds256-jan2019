@@ -34,10 +34,10 @@ public class graphReaderTwo extends TextEdgeInputFormat<LongWritable, NullWritab
                 if (tokens.length >= 2)
                     return new LongPair(Long.parseLong(tokens[0]), Long.parseLong(tokens[1]));
                 else
-                    return new LongPair(-1L, -1L);
+                    return new LongPair(-1L, -1L);  // Add a dummy edge
             }
             catch (NumberFormatException n){
-                return new LongPair(-1L, -1L);
+                return new LongPair(-1L, -1L);  // Add a dummy edge
             }
 
         }

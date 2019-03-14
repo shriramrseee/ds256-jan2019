@@ -36,9 +36,9 @@ class graphReader {
                 try {
                     e.add(new Tuple2<> (Long.parseLong(tokens[0]), Long.parseLong(tokens[1])));
                     if (needUndirected)
-                        e.add(new Tuple2<> (Long.parseLong(tokens[1]), Long.parseLong(tokens[0])));
+                        e.add(new Tuple2<> (Long.parseLong(tokens[1]), Long.parseLong(tokens[0]))); // Reverse edge
                     else
-                        e.add(new Tuple2<> (Long.parseLong(tokens[1]), Long.parseLong(tokens[1])));
+                        e.add(new Tuple2<> (Long.parseLong(tokens[1]), Long.parseLong(tokens[1]))); // To add target vertex in PR
                 }
                 catch (NumberFormatException n) {return e.iterator();}
             }
@@ -57,9 +57,9 @@ class graphReader {
                 try {
                     e.add(new Tuple2<> (Long.parseLong(tokens[0]), Long.parseLong(tokens[1])));
                     if (needUndirected)
-                        e.add(new Tuple2<> (Long.parseLong(tokens[1]), Long.parseLong(tokens[0])));
+                        e.add(new Tuple2<> (Long.parseLong(tokens[1]), Long.parseLong(tokens[0]))); // Reverse edge
                     else
-                        e.add(new Tuple2<> (Long.parseLong(tokens[1]), Long.parseLong(tokens[1])));
+                        e.add(new Tuple2<> (Long.parseLong(tokens[1]), Long.parseLong(tokens[1]))); // To add target vertex in PR
                 }
                 catch (NumberFormatException n) {return e.iterator();}
             }
@@ -78,9 +78,9 @@ class graphReader {
                 try {
                     e.add(new Tuple2<> (Long.parseLong(tokens[1]), Long.parseLong(tokens[2])));
                     if (needUndirected)
-                        e.add(new Tuple2<> (Long.parseLong(tokens[2]), Long.parseLong(tokens[1])));
+                        e.add(new Tuple2<> (Long.parseLong(tokens[2]), Long.parseLong(tokens[1]))); // Reverse edge
                     else
-                        e.add(new Tuple2<> (Long.parseLong(tokens[2]), Long.parseLong(tokens[2])));
+                        e.add(new Tuple2<> (Long.parseLong(tokens[2]), Long.parseLong(tokens[2]))); // To add target vertex in PR
                 }
                 catch (NumberFormatException n) {return e.iterator();}
             }

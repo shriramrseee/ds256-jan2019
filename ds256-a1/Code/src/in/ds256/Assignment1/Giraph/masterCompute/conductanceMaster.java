@@ -10,7 +10,7 @@ import java.io.IOException;
 
 public class conductanceMaster extends MasterCompute {
 
-    public void initialize() throws IllegalAccessException, InstantiationException {
+    public void initialize() throws IllegalAccessException, InstantiationException { // Register aggregators
         registerPersistentAggregator("InDegree", LongSumAggregator.class);
         registerPersistentAggregator("OutDegree", LongSumAggregator.class);
         registerPersistentAggregator("crossEdges", LongSumAggregator.class);
@@ -18,12 +18,12 @@ public class conductanceMaster extends MasterCompute {
 
     public void compute() {
 
-        if (getSuperstep() == 0) {
+        if (getSuperstep() == 0) { // Init Aggregators
             setAggregatedValue("InDegree", new LongWritable(0));
             setAggregatedValue("OutDegree", new LongWritable(0));
             setAggregatedValue("crossEdges", new LongWritable(0));
         }
-        else if(getSuperstep() == 5) {
+        else if(getSuperstep() == 5) { // Compute conductance
             long inDegree = ((LongWritable) getAggregatedValue("InDegree")).get();
             long outDegree = ((LongWritable) getAggregatedValue("OutDegree")).get();
             long crossEdges = ((LongWritable) getAggregatedValue("crossEdges")).get();

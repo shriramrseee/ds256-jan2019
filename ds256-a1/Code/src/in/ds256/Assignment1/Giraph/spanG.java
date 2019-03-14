@@ -14,10 +14,10 @@ public class spanG extends BasicComputation<LongWritable, LongTupleWritable, Nul
     @Override
     public void compute(Vertex<LongWritable, LongTupleWritable, NullWritable> vertex, Iterable<LongTupleWritable> messages) throws IOException {
 
-        if(vertex.getId().get() == -1L) {
+        if(vertex.getId().get() == -1L) {  // Vertex -1 is used to override faulty edge entries like comments etc.
             vertex.voteToHalt();
         }
-        else if (getSuperstep() == 0) {
+        else if (getSuperstep() == 0) { // Used to add target vertices
             LongWritable[] val = { vertex.getId(),  vertex.getId()};
             for (Edge<LongWritable, NullWritable> edge : vertex.getEdges()) {
                 sendMessage(edge.getTargetVertexId(),  new LongTupleWritable(val));
@@ -29,7 +29,7 @@ public class spanG extends BasicComputation<LongWritable, LongTupleWritable, Nul
 
             if(replicate==1) {
                 for (LongTupleWritable message : messages) {
-                    vertex.addEdge(EdgeFactory.create((LongWritable) message.get()[0]));
+                    vertex.addEdge(EdgeFactory.create((LongWritable) message.get()[0])); // Add reverse edges
                 }
             }
         }
@@ -38,7 +38,7 @@ public class spanG extends BasicComputation<LongWritable, LongTupleWritable, Nul
             long sourceId = Long.parseLong(getContext().getConfiguration().get("sourceId"));
 
             // [Distance, Parent]
-            LongWritable[] val = {new LongWritable(sourceId == vertex.getId().get() ? 0: Long.MAX_VALUE), new LongWritable(-1)};
+            LongWritable[] val = {new LongWritable(sourceId == vertex.getId().get() ? 0: Long.MAX_VALUE), new LongWritable(-1)}; // Init vertices
 
             vertex.setValue(new LongTupleWritable(val));
 
@@ -58,7 +58,7 @@ public class spanG extends BasicComputation<LongWritable, LongTupleWritable, Nul
             boolean isChanged = false;
 
             for (LongTupleWritable message : messages) {
-                if (((LongWritable) message.get()[0]).get() + 1 < dis) {
+                if (((LongWritable) message.get()[0]).get() + 1 < dis) { // Parse messages
                     dis = ((LongWritable) message.get()[0]).get() + 1;
                     parent = ((LongWritable) message.get()[1]).get();
                     isChanged = true;
@@ -72,7 +72,7 @@ public class spanG extends BasicComputation<LongWritable, LongTupleWritable, Nul
                 LongWritable[] new_val = {new LongWritable(val[0].get()), vertex.getId()};
 
                 for (Edge<LongWritable, NullWritable> edge : vertex.getEdges()) {
-                    sendMessage(edge.getTargetVertexId(), new LongTupleWritable(new_val));
+                    sendMessage(edge.getTargetVertexId(), new LongTupleWritable(new_val)); // Send updated value
                 }
 
             }

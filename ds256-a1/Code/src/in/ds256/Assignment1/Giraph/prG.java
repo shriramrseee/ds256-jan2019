@@ -15,21 +15,21 @@ public class prG extends BasicComputation<LongWritable, DoubleTupleWritable, Nul
     @Override
     public void compute(Vertex<LongWritable, DoubleTupleWritable, NullWritable> vertex, Iterable<DoubleWritable> messages) throws IOException {
 
-        if(vertex.getId().get() == -1L) {
+        if(vertex.getId().get() == -1L) { // Vertex -1 is used to override faulty edge entries like comments etc.
             vertex.voteToHalt();
         }
-        else if (getSuperstep() == 0) {
+        else if (getSuperstep() == 0) { // Used to add target vertices
             for (Edge<LongWritable, NullWritable> edge : vertex.getEdges()) {
                 sendMessage(edge.getTargetVertexId(), new DoubleWritable(1.0));
             }
         }
         else if(getSuperstep() == 1) {
-            // Do nothing
+            // Do nothing. can be removed? TBD
         }
         else if (getSuperstep() == 2) {
 
             // [OldPR, NewPR]
-            DoubleWritable[] pr = {new DoubleWritable(1000.0), new DoubleWritable(1.0 / (getTotalNumVertices()-1))};
+            DoubleWritable[] pr = {new DoubleWritable(1000.0), new DoubleWritable(1.0 / (getTotalNumVertices()-1))}; // Initialize (-1 to counter vertex with ID -1)
 
             vertex.setValue(new DoubleTupleWritable(pr));
 
@@ -49,7 +49,7 @@ public class prG extends BasicComputation<LongWritable, DoubleTupleWritable, Nul
             }
 
             oldPR = newPR;
-            newPR = weight * sum + (1-weight) * (1.0 / (getTotalNumVertices()-1));
+            newPR = weight * sum + (1-weight) * (1.0 / (getTotalNumVertices()-1)); // New PR
 
             DoubleWritable[] pr = {new DoubleWritable(oldPR), new DoubleWritable(newPR)};
 
@@ -59,8 +59,8 @@ public class prG extends BasicComputation<LongWritable, DoubleTupleWritable, Nul
                 sendMessage(edge.getTargetVertexId(), new DoubleWritable(newPR /vertex.getNumEdges()));
             }
 
-            aggregate("relDiff", new DoubleWritable(Math.abs(newPR - oldPR)/oldPR));
-            aggregate("sumPR", new DoubleWritable(newPR));
+            aggregate("relDiff", new DoubleWritable(Math.abs(newPR - oldPR)/oldPR)); // Update Relative Diff
+            aggregate("sumPR", new DoubleWritable(newPR)); // For debug
 
         }
 

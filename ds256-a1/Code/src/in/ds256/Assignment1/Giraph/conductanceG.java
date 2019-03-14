@@ -15,10 +15,10 @@ public class conductanceG extends BasicComputation<LongWritable, BooleanWritable
     @Override
     public void compute(Vertex<LongWritable, BooleanWritable, NullWritable> vertex, Iterable<LongWritable> messages) throws IOException {
 
-        if (vertex.getId().get() == -1L) {
+        if (vertex.getId().get() == -1L) { // Vertex -1 is used to override faulty edge entries like comments etc.
             vertex.voteToHalt();
         }
-        else if (getSuperstep() == 0) {
+        else if (getSuperstep() == 0) { // Used to add target vertices
             for (Edge<LongWritable, NullWritable> edge : vertex.getEdges()) {
                 sendMessage(edge.getTargetVertexId(), vertex.getId());
             }
@@ -29,7 +29,7 @@ public class conductanceG extends BasicComputation<LongWritable, BooleanWritable
 
             if(replicate==1) {
                 for (LongWritable message : messages) {
-                    vertex.addEdge(EdgeFactory.create(new LongWritable(message.get())));
+                    vertex.addEdge(EdgeFactory.create(new LongWritable(message.get()))); // Add reverse edges
                 }
             }
         }
@@ -38,10 +38,10 @@ public class conductanceG extends BasicComputation<LongWritable, BooleanWritable
             Random rand = new Random();
             vertex.setValue(new BooleanWritable(rand.nextInt(1000) % 3 == 0));
             if (vertex.getValue().get()) {
-                aggregate("InDegree", new LongWritable(vertex.getNumEdges()));
+                aggregate("InDegree", new LongWritable(vertex.getNumEdges())); // Degree of vertices IN set
             }
             else {
-                aggregate("OutDegree", new LongWritable(vertex.getNumEdges()));
+                aggregate("OutDegree", new LongWritable(vertex.getNumEdges())); // Degree of vertices OUT set
             }
 
         }
@@ -55,7 +55,7 @@ public class conductanceG extends BasicComputation<LongWritable, BooleanWritable
             long count = 0L;
             for (LongWritable message : messages) {
                 if ((message.get() == 1L) ^ vertex.getValue().get()) {
-                    count++;
+                    count++; // Cross edge count
                 }
             }
             aggregate("crossEdges", new LongWritable(count));

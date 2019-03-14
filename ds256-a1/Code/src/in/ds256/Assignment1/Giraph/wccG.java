@@ -15,11 +15,11 @@ public class wccG extends BasicComputation<LongWritable, LongWritable, NullWrita
     public void compute(Vertex<LongWritable, LongWritable, NullWritable> vertex, Iterable<LongWritable> messages) throws IOException {
 
 
-        if(vertex.getId().get() == -1L) {
+        if(vertex.getId().get() == -1L) { // Vertex -1 is used to override faulty edge entries like comments etc.
             vertex.voteToHalt();
         }
         else if (getSuperstep() == 0) {
-            for (Edge<LongWritable, NullWritable> edge : vertex.getEdges()) {
+            for (Edge<LongWritable, NullWritable> edge : vertex.getEdges()) { // Used to add target vertices
                 sendMessage(edge.getTargetVertexId(), vertex.getId());
             }
         }
@@ -30,14 +30,14 @@ public class wccG extends BasicComputation<LongWritable, LongWritable, NullWrita
 
             if(replicate==1) {
                 for (LongWritable message : messages) {
-                    vertex.addEdge(EdgeFactory.create(new LongWritable(message.get())));
+                    vertex.addEdge(EdgeFactory.create(new LongWritable(message.get()))); // Add reverse edges
                 }
             }
         }
         else if (getSuperstep() == 2) {
 
             for (Edge<LongWritable, NullWritable> edge : vertex.getEdges()) {
-                sendMessage(edge.getTargetVertexId(), vertex.getId());
+                sendMessage(edge.getTargetVertexId(), vertex.getId()); // Send my ID
             }
 
             vertex.voteToHalt();
@@ -53,11 +53,11 @@ public class wccG extends BasicComputation<LongWritable, LongWritable, NullWrita
                 vertex.setValue(new LongWritable(maxValue));
 
                 for (Edge<LongWritable, NullWritable> edge : vertex.getEdges()) {
-                    sendMessage(edge.getTargetVertexId(), new LongWritable(maxValue));
+                    sendMessage(edge.getTargetVertexId(), new LongWritable(maxValue)); // Send message if I am changed
                 }
             }
 
-            vertex.voteToHalt();
+            vertex.voteToHalt(); // Halt by default
         }
 
     }

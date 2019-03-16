@@ -103,7 +103,7 @@ do
    echo $a $b $c >> temp1
 done
 
-cat t | while read line
+cat t1 | while read line
 do
    getYarnLog.sh $line > temp
    hdfs dfs -put temp /user/shriramr/logs/$line.log

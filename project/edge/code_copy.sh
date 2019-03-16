@@ -3,7 +3,7 @@
 echo "-----------------Pulling Latest Code-------------------"
 
 pushd ds256-jan2019;
-git pull origin;
+ssh-agent bash -c 'ssh-add ../.ssh/id_rsa; git pull origin'
 
 echo "-----------------Deleting Existing Code from Container------------------"
 

@@ -22,13 +22,15 @@ from input_query import process_input_query
 # with open("sample_queries/vertex_search.json", "rb") as f:
 #     query = f.read()
 #     process_input_query(query)
-
-
-with open("sample_queries/edge_search.json", "rb") as f:
-    query = f.read()
-    process_input_query(query)
+#
+#
+# with open("sample_queries/edge_search.json", "rb") as f:
+#     query = f.read()
+#     process_input_query(query)
 
 # g = traversal().withRemote(DriverRemoteConnection('ws://10.24.24.2:8182/gremlin', 'g'))
+#
+# print g.V().hasLabel("person").toList()
 
 # g.V().hasLabel('person').has('name', P.eq('marko')).out()
 
@@ -49,8 +51,9 @@ with open("sample_queries/edge_search.json", "rb") as f:
 #         # prop[i] = p[i][0].value
 
 
-# from local_graph import fetch_store_local_graph
-#
+from local_graph import fetch_store_local_graph, clear_local_graph
+
+clear_local_graph()
 # fetch_store_local_graph(3,3)
 
 

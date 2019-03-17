@@ -33,6 +33,11 @@ class local_vertex:
     def __dict__(self):
         return {'id': self.id, 'label': self.label, 'prop': self.prop}
 
+    def load_from_json(self, j):
+        self.id = j['id']
+        self.label = j['label']
+        self.prop = j['prop']
+
 
 class local_edge:
     """
@@ -49,13 +54,12 @@ class local_edge:
     def __dict__(self):
         return {'id': self.id, 'label': self.label, 'prop': self.prop, 'inV': self.inV, 'outV': self.outV}
 
-
-def clear_local_graph():
-    """
-    Delete all vertices in local graph
-    """
-    g = traversal().withRemote(DriverRemoteConnection('ws://localhost:8182/gremlin', 'g'))
-    g.V().drop().iterate()
+    def load_from_json(self, j):
+        self.id = j['id']
+        self.label = j['label']
+        self.prop = j['prop']
+        self.inV = j['inV']
+        self.outV = j['outV']
 
 
 def fetch_store_local_graph(id, hops=3):
@@ -76,7 +80,7 @@ def fetch_store_local_graph(id, hops=3):
         p = g.V(id).propertyMap().toList()[0]
         for i in p:
             prop[i] = p[i][0].value
-        vertices.append(local_vertex(id, label, prop))
+        vertices.append(local_vertex(id, label, prop).__dict__)
 
     # Construct edge list
     edges = []
@@ -89,27 +93,39 @@ def fetch_store_local_graph(id, hops=3):
         p = g.E(id).propertyMap().toList()[0]
         for i in p:
             prop[i] = p[i].value
-        edges.append(local_edge(id, label, prop, inV, outV))
+        edges.append(local_edge(id, label, prop, inV, outV).__dict__)
 
-    # Persist in local Tinkergraph
+    # Persist in JSON format
+    vertices = json.dumps(vertices)
+    edges = json.dumps(edges)
 
-    g = traversal().withRemote(DriverRemoteConnection('ws://localhost:8182/gremlin', 'g'))
+    with open("local_data/vertices.json", 'wb') as f:
+        f.write(vertices)
 
-    new_id = {}
-
-    for v in vertices:
-        new_vertex = g.addV(v.label)
-        for i in v.prop:
-            new_vertex.property(i, v.prop[i])
-        new_id[v.id] = new_vertex.id().toList()[0]
-
-    print new_id
-
-    for e in edges:
-        s = g.V(new_id[e.outV])
-        d = g.V(new_id[e.inV])
-        new_edge = g.addE(e.label).from_(s).to(d)
-        for i in e.prop:
-            new_edge.property(i, e.prop[i])
+    with open("local_data/edges.json", 'wb') as f:
+        f.write(edges)
 
 
+def read_local_graph():
+    """
+    Reads local graph JSON and returns vertex and edge list
+    :return:
+    """
+    vertices = []
+    edges = []
+
+    with open("local_data/vertices.json", 'rb') as f:
+        data = json.load(f)
+        for v in data:
+            t = local_vertex()
+            t.load_from_json(v)
+            vertices.append(t)
+
+    with open("local_data/edges.json", 'rb') as f:
+        data = json.load(f)
+        for e in data:
+            t = local_edge()
+            t.load_from_json(e)
+            edges.append(t)
+
+    return [vertices, edges]

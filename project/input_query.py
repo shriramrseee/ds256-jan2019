@@ -1,8 +1,7 @@
 import copy
 import json
 
-from query_local import query_local
-from query_server import query_server
+from query import query_server
 
 
 class query:
@@ -41,8 +40,8 @@ def process_input_query(input_query):
         q.load_edge_search(input_query)
 
     # Execute Remote query
-    remote_result = query_server(copy.deepcopy(q))
+    remote_result = query_server(copy.deepcopy(q), 'remote')
     # Execute Local query
-    local_result = query_local(copy.deepcopy(q))
+    local_result = query_server(copy.deepcopy(q), 'local')
 
     print local_result, remote_result

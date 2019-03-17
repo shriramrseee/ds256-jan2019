@@ -1,4 +1,4 @@
-from local_graph import read_local_graph
+from archive.local_graph import read_local_graph
 import operator
 
 

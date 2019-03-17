@@ -18,13 +18,15 @@ from gremlin_python.process.traversal import Bindings
 from gremlin_python.process.traversal import WithOptions
 
 
-def query_server(query):
+def query_server(query, location):
     """
     Contact the Gremlin server with given query and get the query result
     :return: query result
     """
 
-    g = traversal().withRemote(DriverRemoteConnection('ws://10.24.24.2:8182/gremlin', 'g'))
+    ip = {'local': 'ws://localhost:8182/gremlin', 'remote': 'ws://10.24.24.2:8182/gremlin'}
+
+    g = traversal().withRemote(DriverRemoteConnection(ip[location], 'g'))
 
     sort_orders = {'asc': Order.asc, 'desc': Order.desc}
     filter_pred = {'gt': P.gt, 'gte': P.gte, 'lt': P.lt, 'lte': P.lte, 'eq': P.eq, 'neq': P.neq}

@@ -1,0 +1,7 @@
+{
+  "type": "path_search",
+  "filter": {
+    "from": "<India>",
+    "to": "<Australia>"
+  }
+}

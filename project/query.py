@@ -6,7 +6,7 @@ from gremlin_python.process.anonymous_traversal import traversal
 from gremlin_python.process.graph_traversal import __
 from gremlin_python.process.strategies import *
 from gremlin_python.driver.driver_remote_connection import DriverRemoteConnection
-from gremlin_python.process.traversal import T
+from gremlin_python.process.traversal import T, ShortestPath
 from gremlin_python.process.traversal import Order
 from gremlin_python.process.traversal import Cardinality
 from gremlin_python.process.traversal import Column
@@ -53,7 +53,6 @@ def query_server(query, location, answer):
 
     elif query.type == 'edge_search':
         result = g.V()
-        g.E().h
         if query.filter['from'] is not None:
             result = result.hasLabel(query.filter['from']).outE()
         if query.filter['to'] is not None:
@@ -66,3 +65,10 @@ def query_server(query, location, answer):
         for e in result:
             answer.union({(e.outV.label, e.label, e.inV.label)})
         print location, answer.result, time.time() - st
+
+    elif query.type == 'path_search':
+        # Execute query
+        g = g.withComputer()
+        result = g.V().hasLabel(query.filter['from']).shortestPath().with_(ShortestPath.edges, Direction.OUT).with_(ShortestPath.target, __.hasLabel(query.filter['to'])).with_(ShortestPath.includeEdges, True).toSet()
+        print location, result, time.time() - st
+        answer.union(result)

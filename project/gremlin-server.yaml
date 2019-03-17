@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-host: 0.0.0.0
+host: localhost
 port: 8182
 scriptEvaluationTimeout: 30000
 graphs: {

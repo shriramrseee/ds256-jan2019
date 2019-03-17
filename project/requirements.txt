@@ -1,2 +1,3 @@
 futures
 gremlinpython
+networkx

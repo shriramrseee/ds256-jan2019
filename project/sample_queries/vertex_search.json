@@ -1,11 +1,9 @@
 {
   "type": "vertex_search",
   "filter": {
-    "has_label" : "person",
-    "has" : ["age", "gt", 30]
-  },
-  "sort": {
-    "order": "desc",
-    "attribute": "age"
+    "has_label": null,
+    "has": null,
+    "from": "<India>",
+    "to": null
   }
 }

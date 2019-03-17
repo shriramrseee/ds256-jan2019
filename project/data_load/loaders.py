@@ -1,3 +1,5 @@
+import time
+
 from gremlin_python import statics
 from gremlin_python.driver.client import Client
 from gremlin_python.process.anonymous_traversal import traversal
@@ -25,11 +27,13 @@ def load_fact(location, filepath):
 
     print "Loading Facts"
 
-    g = traversal().withRemote(location, 'g')
+    g = traversal().withRemote(DriverRemoteConnection(location, 'g'))
 
     with open(filepath, "rb") as f:
+        i = 0
+        start = time.time()
         for l in f:
-            edge = l[:-3].split("\t")
+            edge = l[1:-1].split("\t")
             if len(edge) == 3:
                 s = g.V().hasLabel(edge[0]).toList()
                 d = g.V().hasLabel(edge[2]).toList()
@@ -37,9 +41,16 @@ def load_fact(location, filepath):
                     s = g.addV(edge[0]).toList()
                 if len(d) == 0:
                     d = g.addV(edge[2]).toList()
-                    g.addE(edge[1]).from_(s[0].id).to(d[0].id)
+                new_edge = g.addE(edge[1]).from_(s[0]).to(d[0]).toList()
+            i += 1
+            if i % 1000 == 0:
+                end = time.time()
+                print i, end-start
+        end = time.time()
+        print i, end - start
 
     print g.V().count().toList()
+    print g.E().count().toList()
 
 
 def load_date(location, filepath):
@@ -52,13 +63,21 @@ def load_date(location, filepath):
     g = traversal().withRemote(DriverRemoteConnection(location, 'g'))
 
     with open(filepath, "rb") as f:
+        i = 0
+        start = time.time()
         for l in f:
-            prop = l[:-3].split("\t")
+            prop = l[1:-1].split("\t")
             if len(prop) == 3:
                 v = g.V().hasLabel(prop[0]).toList()
                 if len(v) == 0:
                     v = g.addV(prop[0]).toList()
                 g.V(v[0].id).property(prop[1], prop[2]).toList()
+            i += 1
+            if i % 1000 == 0:
+                end = time.time()
+                print i, end - start
+        end = time.time()
+        print i, end - start
 
 
 def load_literal(location, filepath):
@@ -71,13 +90,18 @@ def load_literal(location, filepath):
     g = traversal().withRemote(DriverRemoteConnection(location, 'g'))
 
     with open(filepath, "rb") as f:
+        i = 0
+        start = time.time()
         for l in f:
-            prop = l[:-3].split("\t")
+            prop = l[1:-1].split("\t")
             if len(prop) == 3:
                 v = g.V().hasLabel(prop[0]).toList()
                 if len(v) == 0:
                     v = g.addV(prop[0]).toList()
                 g.V(v[0].id).property(prop[1], prop[2]).toList()
-
-
-
+            i += 1
+            if i % 1000 == 0:
+                end = time.time()
+                print i, end - start
+        end = time.time()
+        print i, end - start

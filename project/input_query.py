@@ -1,5 +1,7 @@
 import copy
 import json
+import threading
+from multiprocessing import Process
 
 from query import query_server
 
@@ -16,12 +18,20 @@ class query:
 
     def load_vertex_search(self, input_query):
         self.filter = input_query['filter']
-        self.sort = input_query['sort']
 
     def load_edge_search(self, input_query):
         self.filter = input_query['filter']
-        self.sort = input_query['sort']
 
+class answer:
+    """
+    Class to capture result
+    """
+
+    def __init__(self):
+        self.result = set([])
+
+    def union(self, r):
+        self.result |= r
 
 def process_input_query(input_query):
     """
@@ -39,9 +49,17 @@ def process_input_query(input_query):
     elif q.type == 'edge_search':
         q.load_edge_search(input_query)
 
-    # Execute Remote query
-    remote_result = query_server(copy.deepcopy(q), 'remote')
     # Execute Local query
-    local_result = query_server(copy.deepcopy(q), 'local')
+    local_result = answer()
+    lt = threading.Thread(target=query_server, args=(copy.deepcopy(q), 'local', local_result))
+    lt.start()
 
-    print local_result, remote_result
+    # Execute Remote query
+    remote_result = answer()
+    rt = threading.Thread(target=query_server, args=(copy.deepcopy(q), 'remote', remote_result))
+    rt.start()
+
+    lt.join()
+    rt.join()
+
+    print local_result.result.union(remote_result.result)

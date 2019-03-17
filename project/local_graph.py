@@ -58,14 +58,14 @@ def clear_local_graph():
     g.V().drop().iterate()
 
 
-def fetch_store_local_graph(id, hops=3):
+def fetch_store_local_graph(source, hops=3):
     """
     Fetch and store subgraph locally
     """
     g = traversal().withRemote(DriverRemoteConnection('ws://10.24.24.2:8182/gremlin', 'g'))
 
     # Fetch remote subgraph
-    subgraph = g.V(id).repeat(__.inE().subgraph('subGraph').outV()).times(hops).cap('subGraph').toList()[0]
+    subgraph = g.V().hasLabel(source).repeat(__.outE().subgraph('subGraph').outV()).times(hops).cap('subGraph').toList()[0]
 
     # Construct vertex list
     vertices = []
@@ -91,6 +91,8 @@ def fetch_store_local_graph(id, hops=3):
             prop[i] = p[i].value
         edges.append(local_edge(id, label, prop, inV, outV))
 
+    print len(vertices), len(edges)
+
     # Persist in local Tinkergraph
 
     g = traversal().withRemote(DriverRemoteConnection('ws://localhost:8182/gremlin', 'g'))
@@ -103,12 +105,11 @@ def fetch_store_local_graph(id, hops=3):
             new_vertex.property(i, v.prop[i])
         new_id[v.id] = new_vertex.id().toList()[0]
 
-    print new_id
-
     for e in edges:
         s = g.V(new_id[e.outV])
         d = g.V(new_id[e.inV])
-        new_edge = g.addE(e.label).from_(s).to(d)
+        g.addE(e.label).from_(s).to(d).toList()
+        new_edge = g.E().hasLabel(e.label)
         for i in e.prop:
             new_edge.property(i, e.prop[i])
 

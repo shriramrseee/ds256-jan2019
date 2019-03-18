@@ -1,7 +1,7 @@
 {
   "type": "vertex_search",
   "filter": {
-    "has_label": null,
+    "has_label": "<50_Cent>",
     "has": null,
     "from": null,
     "to": null

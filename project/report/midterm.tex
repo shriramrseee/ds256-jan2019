@@ -351,16 +351,23 @@ In this mid-term period, a basic distributed knowledge graph querying system has
 The following sections cover the system design and implementation completed so far with respect to the proposed targets for midterm,
 
 \subsection{Remote (Cloud) Layer}
-This layer consists of an in-memory graph database engine \emph{Tinkergraph} running on the head node of \emph{Rigel} Cluster. Integration of GoDB was explored but due to technical issues, \emph{Tinkergraph} was chosen as the desired engine. It offers a good set of APIs to run a variety of queries related to graphs and supports different programming languages. A distributed version spanning multiple nodes will be explored in future.
+This layer consists of an in-memory graph database engine \emph{TinkerGraph}\cite{tinkergraph} running on the head node of \emph{Rigel} Cluster. Integration of \emph{GoDB} \cite{jamadagni:ccgrid:2016} was explored but due to technical issues, \emph{TinkerGraph} was chosen as the desired engine. It offers a good set of APIs to run a variety of queries related to graphs and supports different programming languages. It is built on top of \emph{TinkerPop} framework and \emph{Gremlin}\cite{Rodriguez:2015:GGT:2815072.2815073} programming language A distributed version spanning multiple nodes will be explored in future.
 
 \subsection{Edge Layer}
 The edge layer consists of different modules each with a specific functionality. The modules are explained in detail in the section below,
 
 \subsubsection{Edge Graph Processing}
-The same \emph{tinkergraph} engine used in the remote layer is spawned on the edge as a single node in-memory store. The performance of this is evaluated through experiments. A custom engine is required only if the edge based \emph{tinkergraph} engine is found to be a bottleneck.
+The same \emph{TinkerGraph} engine used in the remote layer is spawned on the edge as a single node in-memory store. The performance of this is evaluated through experiments. A custom engine is required only if the edge based \emph{TinkerGraph} engine is found to be a bottleneck.
 
 \subsubsection{Knowledge Graph Partitioning}
-The logic for partitioning is based on the association of an edge with a single entity in the Knowledge graph. E.g. <India>. Given a entity, this module queries the remote server to fetch the subgraph centered at the given entity and spanning for a specified number of hops (E.g. 2). This subgraph is then inserted into the \emph{Tinkergraph} server running locally and forms the local knowledge graph.
+The logic for partitioning is based on the association of an edge with a single entity in the Knowledge graph. E.g. <India>. Given a entity, this module queries the remote server to fetch the subgraph centered at the given entity and spanning for a specified number of hops (E.g. 2). This subgraph is then inserted into the \emph{TinkerGraph} server running locally and forms the local knowledge graph. \ref{fig:lkg} shows a snapshot example of local knowledge graph centered around <India>.
+
+\begin{figure}[!t]
+	\centering
+	\includegraphics[width=0.95\columnwidth]{India.png}
+	\caption{Local Knowledge Graph}
+	\label{fig:lkg}
+\end{figure}
 
 \subsubsection{Query Partitioning}
 The query partitioning module divides the input query into local and remote queries and fires them against the respective servers. The input queries are provided in JSON format with custom fields for each query type. The logic is different for each type of query. It is detailed below,
@@ -373,6 +380,33 @@ The query partitioning module divides the input query into local and remote quer
 		\item If the previous step returns no path, then a series of queries are fired to the remote layer with source vertex changed to \emph{cut vertices} and target vertex unchanged. This will return a portion of shortest path in the remote server
 		\item A series of local queries are fired to determine the paths from original source to \emph{cut vertices}. 
 	\end{itemize}
+Some example queries of each type is given below,
+\begin{verbatim}
+{ // Vertex Search
+    "type": "vertex_search",
+    "filter": {
+        "has_label": "<50_Cent>",
+        "has": null,
+        "from": null,
+        "to": null
+    }
+}
+{ // Edge Search
+    "type": "edge_search",
+    "filter": {
+        "has_label": "<exports>",
+        "from": null,
+        "to": null
+    }
+}
+{ // Path Search
+    "type": "path_search",
+    "filter": {
+        "from": "<India>",
+        "to": "<Barack_Obama>"
+    }
+}
+\end{verbatim}
 \end{itemize}
 
 \subsubsection{Combining Query Results}
@@ -382,7 +416,7 @@ Combining the query results is implemented as follows,
 	\item \emph{Path search} - If the path is entirely contained inside edge, the local server result is directly used. For cross paths, The result from local server and remote server are joined at the \emph{cut vertex} and then the shortest path is determined and provided as output
 \end{itemize}
 
- 
+It has to be noted that all custom modules in edge layer were built in \emph{Python} and queries were submitted to local and remote servers through \emph{gremlinpython} package. No indexes were used in this mid term project. Also, the queries to remote server can performed concurrently due to an issue with \emph{gremlin}. So, only one local query and one remote query can run concurrently at a time.
 
 %\begin{figure*}[th]
 %	\centering%~%
@@ -402,27 +436,51 @@ Combining the query results is implemented as follows,
 
 \section{Experiments}
 
-The experimental setup is as follows: Microsoft Azure cloud platform will be used to run the entire edge-cloud setup. 5 D4 VMs will be used to run the cloud layer. These VMs will host the GoDB head and worker nodes. GoDB uses GoFFish v2.6 and Java v1.7. VIoLET\cite{DBLP:journals/corr/abs-1806-06032} will be used to virtually emulate the entire edge layer. 20 edges of type Pi3B+ will be created and interconnected with each other. The latency and bandwidth of edge-edge and edge-cloud will be set to 1ms-50mbps and 5ms-20mbps respectively. All the devices will be running on CentOS v7.
+The experimental setup is as follows: A single node in-memory version of \emph{TinkerGraph} was run in the head node of \emph{Rigel} cluster. The node has the following specs: 32 core AMD Opteron 6376 processor with 128 GB DDR3 RAM running CentOS 7 version. It is connected through 1 GBps ethernet and has 6 TB HDD and 256 GB SSD storage. Persistence was turned off in this layer.
 
-The YAGO dataset will be the primary knowledge graph data that will be used for the experiments. Since the size of the full dataset is huge, only a fraction of the dataset will be potentially used based on the availability of sufficient cloud resources. NELL\cite{Mitchell:2018:NL:3210350.3191513} could be used as a secondary dataset. The baseline system for comparison will be GoDB in cloud layer with all the edges running all the queries directly on the cloud without caching. The graph in GoDB will be partitioned using METIS with one subgraph per core.
+A single edge device was spawned as Docker container with 4 cores, 1GB RAM and Ubuntu 18.04 LTS simulating a Raspberry Pi3B+ class of device. The network connectivity has a latency of 5ms and bandwidth of 100 MBps.
 
-The query workload for the experiments will be of the following types - Vertex search, Edge search, Reachability, Neighbourhood, Shortest Path and as a stretch goal, Subgraph Isomorphism. 
+A smaller version of the \emph{YAGO}\cite{Suchanek:2007:YCS:1242572.1242667} dataset was used in these experiments. It consists of 18845 edges, 14977 vertices and 1400 total no. of vertex attributes. The vertices consists of most popular entities in the knowledge graph.
 
-The size of the knowledge graph that be accommodated inside the edge device will be determined through the following experiment - 10 queries of each type will be triggered on the edge for different sizes of local graph which is doubled in each iteration. The same set of query will also be triggered in cloud and the time taken in both the cases will be measured. This size should be the maximum size in which the local query time is less than the global query time for the same subgraph. This size will be used in all the below experiments as well.
+There were some technical issues in converting the large dataset into a compatible version for \emph{TinkerGraph}. This will be explored as part of final term project. The local knowledge graph was centered at <India> with 2 hop neighbourhood.
 
-\textbf{Microbenchmarks}
-\begin{enumerate}%[noitemsep,topsep=0pt,parsep=0pt,partopsep=0pt]
-	\item Query partitioning logic will incur some time to partition the query and generate a query plan. It is useful to measure this time for each query type. An experiment is performed with 100 different queries for each type being run on the edge and the time to partition is measured and plotted as a violin plot. The violin should ideally not have long tails.
-	\item Graph indexing time and memory has to be measured for different query types as a function of graph size. In this experiment, for each graph size, index construction time and index size is measured for each index type. The time taken and size should increase as per the time and space complexity of the index.
-\end{enumerate}
+\subsection{Vertex Search}
 
-The experiments will test the impact of query partitioning, query caching and graph indexing. The key metric to be measured is the query latency (time to get the results).  
+Random queries with different values for the search fields uniformly distributed were generated for 500s and the time taken for local and remote query response was measured. \ref{fig:vertex_search} shows the time taken distribution for each query type with X-axis denoting the query type and Y-axis denoting the time taken in ms (log). It can be observed that the time taken by local queries are generally less compared to remote queries (approx. $5$x). This is as expected since there is a network latency and size of remote knowledge graph slowing the remote server query time. The time taken is consistent for all query types under a given server. This is as expected since the query requires maximum of 1 hop distance traversal. 
 
-\begin{enumerate}%[noitemsep,topsep=0pt,parsep=0pt,partopsep=0pt]
-	\item \textbf{Query Partitioning:} 100 random queries of each type will be triggered in total with the queries uniformly and randomly distributed across all the edges. The time taken to complete the query in the local knowledge graph, the global knowledge graph and query completion time is measured. When compared with baseline, the query completion time should be less in the new system and the local querying time should be far less than the global time since the size of local graph will be smaller compared to the global graph. This showcases the effectiveness of Query Partitioning on the performance.
-    \item \textbf{Query Caching:} There will be two baselines for comparison. One is the cloud only baseline and the other is the edge-cloud setup with cache disabled. In this experiment, each edge will have 20 different queries. These queries will be executed 5 times each in random order. This is to enable repetition of the same query from a given edge device. The time taken to complete the query in local and global graph and the total time will be measured. The cache hit/miss count will also be logged for each query execution. The cache enabled version should ideally outperform the other two baselines in terms of global execution time since the global query result will be cached in the edge.
-    \item \textbf{Graph Indexing:} The baseline for graph indexing will be edge-cloud setup with indexing disabled on the edge. This experiment consists of 100 random queries of each type similar to the Query Partitioning experiment. The time taken to complete the local query with index and without index is measured. The outcome should be that the time taken with index should be less than the without index baseline. The effectiveness of each index for each query type will be different since problems which are NP complete like subgraph isomorphism will offer more benefit in having the index than other simple problems like vertex or edge search.
-\end{enumerate}
+\begin{figure}[!t]
+	\centering
+	\includegraphics[width=0.95\columnwidth]{vs.pdf}
+	\caption{Vertex Search - Performance}
+	\label{fig:vertex_search}
+\end{figure} 
+
+\subsection{Edge Search}
+
+Similar to Vertex search, random queries were generated with different values in search fields uniformly for 500s. \ref{fig:edge_search} shows the time taken in ms for different query types. The remote server query times are order of magnitudes higher than that of local which is as expected. The label search takes longest time since there are many edges having the same label unlike vertex where labels are unique. From and To searches will hit only a single vertex and its one hop neighbour and so their performance is similar to that of vertex search
+
+\begin{figure}[!t]
+	\centering
+	\includegraphics[width=0.95\columnwidth]{es.pdf}
+	\caption{Edge Search - Performance}
+	\label{fig:edge_search}
+\end{figure} 
+
+\subsection{Path Search}
+
+For Path search, the source vertex was fixed at <India> and the destination vertex was randomly assigned from the list of all vertices. The experiment was run for 1000s to allow for more data points. The no. of \emph{cut vertices} was limited to 10 so that experiments complete in reasonable time. This means there could be some incorrect results. \ref{fig:path_search} shows the time taken in ms for different query types. Remote server took much larger time to respond since a series of queries were fired (one for each \emph{cut vertex}). The time taken also depended on the length of paths returned in the result.
+
+
+\begin{figure}[!t]
+	\centering
+	\includegraphics[width=0.95\columnwidth]{ps.pdf}
+	\caption{Path Search - Performance}
+	\label{fig:path_search}
+\end{figure}
+
+\section{Conclusion}
+Regarding the mid-term deliverables, key modules to make edge layer work were implemented successfully. However, these modules have to be extended and refined to handle different other query types and possible corner cases. One of the major item is missed in this deliverable is the non-availability of experiments using the full dataset which could clearly explain the scalability of the system.
+
 
 % trigger a \newpage just before the given reference
 % number - used to balance the columns on the last page

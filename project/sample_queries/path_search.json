@@ -1,7 +1,7 @@
 {
   "type": "path_search",
   "filter": {
-    "from": null,
-    "to": null
+    "from": "<India>",
+    "to": "<Barack_Obama>"
   }
 }

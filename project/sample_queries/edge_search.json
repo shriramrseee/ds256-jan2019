@@ -1,7 +1,7 @@
 {
   "type": "edge_search",
   "filter": {
-    "has_label": null,
+    "has_label": "<exports>",
     "from": null,
     "to": null
   }

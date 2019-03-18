@@ -49,7 +49,8 @@ def query_server(query, location, answer):
 
         # Execute query
         answer.union(result.label().toSet())
-        print location, answer.result, time.time() - st
+        # print location, answer.result, time.time() - st
+        answer.time = time.time() - st
 
     elif query.type == 'edge_search':
         result = g.V()
@@ -58,17 +59,19 @@ def query_server(query, location, answer):
         if query.filter['to'] is not None:
             result = result.hasLabel(query.filter['to']).inE()
         if query.filter['has_label'] is not None:
-            result = result.hasLabel(query.filter['has_label'])
+            result = g.E().hasLabel(query.filter['has_label'])
 
         # Execute query
         result = result.toSet()
         for e in result:
             answer.union({(e.outV.label, e.label, e.inV.label)})
-        print location, answer.result, time.time() - st
+        # print location, answer.result, time.time() - st
+        answer.time = time.time() - st
 
     elif query.type == 'path_search':
         # Execute query
         g = g.withComputer()
-        result = g.V().hasLabel(query.filter['from']).shortestPath().with_(ShortestPath.edges, Direction.OUT).with_(ShortestPath.target, __.hasLabel(query.filter['to'])).with_(ShortestPath.includeEdges, True).toSet()
-        print location, result, time.time() - st
+        result = g.V().hasLabel(query.filter['from']).shortestPath().with_(ShortestPath.target, __.hasLabel(query.filter['to'])).with_(ShortestPath.includeEdges, True).toSet()
+        # print location, result, time.time() - st
         answer.union(result)
+        answer.time = time.time() - st

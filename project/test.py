@@ -24,9 +24,12 @@ from input_query import process_input_query
 if __name__ == '__main__':
     freeze_support()
 
-    with open("sample_queries/vertex_search.json", "rb") as f:
-        query = f.read()
-        process_input_query(query)
+    # with open("sample_queries/vertex_search.json", "rb") as f:
+    #     query = f.read()
+    #     process_input_query(query)
+
+    g = traversal().withRemote(DriverRemoteConnection('ws://localhost:8182/gremlin', 'g'))
+    print g.V().label().toList()
 
     # with open("sample_queries/edge_search.json", "rb") as f:
     #     query = f.read()

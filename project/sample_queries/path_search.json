@@ -1,7 +1,7 @@
 {
   "type": "path_search",
   "filter": {
-    "from": "<India>",
-    "to": "<Australia>"
+    "from": null,
+    "to": null
   }
 }

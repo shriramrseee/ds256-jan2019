@@ -1,6 +1,7 @@
 import copy
 import json
 import threading
+import time
 from multiprocessing import Process
 
 from query import query_server
@@ -33,6 +34,7 @@ class answer:
 
     def __init__(self):
         self.result = set([])
+        self.time = 0
 
     def union(self, r):
         self.result |= r
@@ -45,8 +47,6 @@ def process_input_query(input_query, cutV=None):
     :return: query result
     """
 
-    input_query = json.loads(input_query)
-
     q = query(input_query['type'])
 
     if q.type == 'vertex_search':
@@ -57,11 +57,19 @@ def process_input_query(input_query, cutV=None):
         q.load_path_search(input_query)
 
     if q.type == 'path_search':
+
+        start = time.time()
+
         # Execute Local query
         local_result = answer()
         lt = threading.Thread(target=query_server, args=(copy.deepcopy(q), 'local', local_result))
         lt.start()
         lt.join()
+
+        local_time = local_result.time
+        remote_time = 0
+        local_length = len(local_result.result)
+        remote_length = 0
 
         if len(local_result.result) == 0:  # Path is not contained in local
 
@@ -73,6 +81,9 @@ def process_input_query(input_query, cutV=None):
                 rt = threading.Thread(target=query_server, args=(copy.deepcopy(newq), 'remote', remote_result))
                 rt.start()
                 rt.join()
+                remote_time += remote_result.time
+
+            remote_length += len(remote_result.result)
 
             # Find min
             m = None
@@ -88,6 +99,8 @@ def process_input_query(input_query, cutV=None):
                 lt = threading.Thread(target=query_server, args=(copy.deepcopy(newq), 'local', local_result))
                 lt.start()
                 lt.join()
+                local_time += local_result.time
+                local_length += len(local_result.result)
                 for i in local_result.result:
                     for j in i.objects:
                         print j.label,
@@ -97,15 +110,18 @@ def process_input_query(input_query, cutV=None):
             else:
                 print None
 
-        else: # Path is contained in local
+        else:  # Path is contained in local
             for i in local_result.result:
                 for j in i.objects:
                     print j.label,
                 print '\n'
 
+        payload = [local_length, remote_length, local_time, remote_time, time.time() - start]
 
+        return payload
 
     else:
+        start = time.time()
         # Execute Local query
         local_result = answer()
         lt = threading.Thread(target=query_server, args=(copy.deepcopy(q), 'local', local_result))
@@ -119,4 +135,12 @@ def process_input_query(input_query, cutV=None):
         lt.join()
         rt.join()
 
-        print local_result.result.union(remote_result.result)
+        end = time.time()
+
+        payload = [len(local_result.result), len(remote_result.result)]
+
+        local_result.result.union(remote_result.result)
+
+        payload = payload + [len(local_result.result), local_result.time, remote_result.time]
+
+        return payload

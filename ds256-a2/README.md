@@ -5,7 +5,7 @@ This is the public git repository for Assignment 2 of DS256 - Scalable Systems f
 ### Directory Structure ###
 
 * Code
-	* src/main/java/in/ds256/Assignment2
+	* src/in/ds256/Assignment2
 		* TweetsETL.java 
 		* HashTagTrends.java
 		* UserCount.java

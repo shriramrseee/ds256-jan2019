@@ -6,4 +6,4 @@ This is the public git repository for Course Assignments of DS256 - Scalable Sys
 
 * Assignment 0 (Posted on 11th Jan 2019. Due on 11:59 IST, 19th Jan 2019)
 * Assignment 1 (Posted on 21st Feb 2019. Due on 11:59 IST, 10th March 2019)
-* Assignment 2 (To be posted)
+* Assignment 2 (Posted on 26th March 2019. Due on 11:59 IST, 14th April 2019)

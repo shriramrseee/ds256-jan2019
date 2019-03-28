@@ -28,8 +28,8 @@ public class TweetsETL {
 					+ "  <topic> is the kafka topic to consume from\n\n");
 			System.exit(1);
 		}
-	
-		String broker = args[0];
+
+        String broker = args[0];
 		String topic = args[1];
 		String output = args[2];
 

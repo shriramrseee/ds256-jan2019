@@ -1,11 +1,19 @@
 package in.ds256.Assignment2;
 
-import java.util.HashMap;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Map;
-import java.util.regex.Pattern;
 
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.spark.api.java.JavaPairRDD;
+import org.apache.spark.api.java.function.Function;
+import org.apache.spark.api.java.function.PairFlatMapFunction;
+import org.apache.spark.api.java.function.VoidFunction2;
+import org.apache.spark.streaming.Time;
 import scala.Tuple2;
 
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -51,8 +59,47 @@ public class HashTagTrends {
 		*	Code goes here....
 		*/
 
+		JavaDStream<String> tweets = messages.map(ConsumerRecord::value);
+
+		JavaPairDStream<String, Long> trending = tweets.mapPartitionsToPair((PairFlatMapFunction<Iterator<String>, String, Long>) HashTagTrends::getHashTags);
+
+		trending = trending.reduceByKeyAndWindow((i1, i2) -> i1 + i2, Durations.seconds(30), Durations.seconds(10));
+
+		trending.mapToPair(x -> new Tuple2<>(x._2, x._1))
+				.transformToPair((Function<JavaPairRDD<Long, String>, JavaPairRDD<Long, String>>) x -> x.sortByKey(false))
+				.foreachRDD((VoidFunction2<JavaPairRDD<Long, String>, Time>) (r, time) -> {
+					List<Tuple2<Long, String>> top  = r.take(5);
+					Configuration conf = new Configuration();
+					String fpath = output+time.toString().split(" ")[0];
+					FileSystem fs = FileSystem.get(URI.create(fpath), conf);
+					FSDataOutputStream out = fs.create(new Path(fpath));
+					for (Tuple2<Long, String> pair : top) {
+						out.write((pair._1 + "," + pair._2).getBytes(StandardCharsets.UTF_8));
+						out.write(("\n").getBytes(StandardCharsets.UTF_8));
+					}
+					out.close();
+		});
+
 		// Start the computation
 		jssc.start();
 		jssc.awaitTermination();
+	}
+
+	private static Iterator<Tuple2<String, Long>> getHashTags(Iterator<String> x) {
+
+		// Common
+		ArrayList<Tuple2<String, Long>> out = new ArrayList<>();
+		String s;
+		for (; x.hasNext(); ) {
+			s = x.next();
+			try {
+				// Hash tags;
+				for (String aH : s.split(",")[8].split(";"))
+				out.add(new Tuple2<>(aH, 1L));
+			} catch (Exception e) {
+				// Do nothing
+			}
+		}
+		return out.iterator();
 	}
 }

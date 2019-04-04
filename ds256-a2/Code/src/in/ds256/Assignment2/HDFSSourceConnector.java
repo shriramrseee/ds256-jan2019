@@ -24,6 +24,7 @@ public class HDFSSourceConnector extends SourceConnector {
     private String filename;
     private String topic;
     private int batchSize;
+    private int delay;
 
     public HDFSSourceConnector() {
     }
@@ -41,6 +42,7 @@ public class HDFSSourceConnector extends SourceConnector {
         } else {
             this.topic = (String)topics.get(0);
             this.batchSize = parsedConfig.getInt("batch.size");
+            this.delay = parsedConfig.getInt("delay");
         }
     }
 
@@ -57,6 +59,7 @@ public class HDFSSourceConnector extends SourceConnector {
 
         config.put("topic", this.topic);
         config.put("batch.size", String.valueOf(this.batchSize));
+        config.put("delay", String.valueOf(this.delay));
         configs.add(config);
         return configs;
     }
@@ -69,6 +72,6 @@ public class HDFSSourceConnector extends SourceConnector {
     }
 
     static {
-        CONFIG_DEF = (new ConfigDef()).define("file", Type.STRING, (Object)null, Importance.HIGH, "Source filename. If not specified, the standard input will be used").define("topic", Type.LIST, Importance.HIGH, "The topic to publish data to").define("batch.size", Type.INT, 2000, Importance.LOW, "The maximum number of records the Source task can read from file one time");
+        CONFIG_DEF = (new ConfigDef()).define("file", Type.STRING, (Object)null, Importance.HIGH, "Source filename. If not specified, the standard input will be used").define("topic", Type.LIST, Importance.HIGH, "The topic to publish data to").define("batch.size", Type.INT, 2000, Importance.LOW, "The maximum number of records the Source task can read from file one time").define("delay", Type.INT, 10000, Importance.HIGH, "The delay between two batches");
     }
 }

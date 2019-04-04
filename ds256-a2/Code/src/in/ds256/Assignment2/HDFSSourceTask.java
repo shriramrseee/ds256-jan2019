@@ -12,6 +12,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.errors.ConnectException;
 import org.apache.kafka.connect.source.SourceRecord;
@@ -25,13 +31,17 @@ public class HDFSSourceTask extends SourceTask {
     public static final String POSITION_FIELD = "position";
     private static final Schema VALUE_SCHEMA;
     private String filename;
-    private InputStream stream;
+    private FSDataInputStream stream;
     private BufferedReader reader = null;
     private char[] buffer = new char[1024];
     private int offset = 0;
     private String topic = null;
     private int batchSize = 2000;
     private Long streamOffset;
+    private FileSystem fs = null;
+    private int delay = 1000;
+    private FileStatus[] files = null;
+    private int fileno = -1;
 
     public HDFSSourceTask() {
     }
@@ -42,120 +52,73 @@ public class HDFSSourceTask extends SourceTask {
 
     public void start(Map<String, String> props) {
         this.filename = (String)props.get("file");
-        if (this.filename == null || this.filename.isEmpty()) {
-            this.stream = System.in;
+        Configuration conf = new Configuration();
+        conf.set("fs.hdfs.impl", org.apache.hadoop.hdfs.DistributedFileSystem.class.getName());
+        conf.set("fs.file.impl", org.apache.hadoop.fs.LocalFileSystem.class.getName());
+        Path path = new Path(this.filename);
+        try {
+            this.fs = path.getFileSystem(conf);
+            this.files = fs.globStatus(path);
             this.streamOffset = null;
-            this.reader = new BufferedReader(new InputStreamReader(this.stream, StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            log.error(e.getMessage());
         }
-
         this.topic = (String)props.get("topic");
         this.batchSize = Integer.parseInt((String)props.get("batch.size"));
+        this.delay =  Integer.parseInt((String)props.get("delay"));
     }
 
     public List<SourceRecord> poll() throws InterruptedException {
-        if (this.stream == null) {
+
+        if(this.files.length == 0) {
+            return null;
+        }
+        else if(this.fileno == -1){
+            this.fileno++;
             try {
-                this.stream = Files.newInputStream(Paths.get(this.filename));
-                Map<String, Object> offset = this.context.offsetStorageReader().offset(Collections.singletonMap("filename", this.filename));
-                if (offset != null) {
-                    Object lastRecordedOffset = offset.get("position");
-                    if (lastRecordedOffset != null && !(lastRecordedOffset instanceof Long)) {
-                        throw new ConnectException("Offset position is the incorrect type");
-                    }
-
-                    if (lastRecordedOffset != null) {
-                        log.debug("Found previous offset, trying to skip to file offset {}", lastRecordedOffset);
-                        long skipLeft = (Long)lastRecordedOffset;
-
-                        while(skipLeft > 0L) {
-                            try {
-                                long skipped = this.stream.skip(skipLeft);
-                                skipLeft -= skipped;
-                            } catch (IOException var13) {
-                                log.error("Error while trying to seek to previous offset in file {}: ", this.filename, var13);
-                                throw new ConnectException(var13);
-                            }
-                        }
-
-                        log.debug("Skipped to offset {}", lastRecordedOffset);
-                    }
-
-                    this.streamOffset = lastRecordedOffset != null ? (Long)lastRecordedOffset : 0L;
-                } else {
-                    this.streamOffset = 0L;
-                }
-
+                this.stream = fs.open(this.files[fileno].getPath());
                 this.reader = new BufferedReader(new InputStreamReader(this.stream, StandardCharsets.UTF_8));
-                log.debug("Opened {} for reading", this.logFilename());
-            } catch (NoSuchFileException var15) {
-                log.warn("Couldn't find file {} for FileStreamSourceTask, sleeping to wait for it to be created", this.logFilename());
-                synchronized(this) {
-                    this.wait(1000L);
-                    return null;
-                }
-            } catch (IOException var16) {
-                log.error("Error while trying to open file {}: ", this.filename, var16);
-                throw new ConnectException(var16);
+            } catch (IOException e) {
+                log.error(e.getMessage());
+                return null;
             }
         }
 
-        try {
-            BufferedReader readerCopy;
-            synchronized(this) {
-                readerCopy = this.reader;
+        ArrayList<SourceRecord> records = new ArrayList<>();
+
+        while(true) {
+            String line = null;
+            try {
+                line = this.reader.readLine();
+            } catch (IOException e) {
+               return null;
             }
-
-            if (readerCopy == null) {
-                return null;
-            } else {
-                ArrayList<SourceRecord> records = null;
-                int nread = 0;
-
-                while(true) {
-                    do {
-                        if (!readerCopy.ready()) {
-                            if (nread <= 0) {
-                                synchronized(this) {
-                                    this.wait(1000L);
-                                }
-                            }
-
-                            return records;
-                        }
-
-                        nread = readerCopy.read(this.buffer, this.offset, this.buffer.length - this.offset);
-                        log.trace("Read {} bytes from {}", nread, this.logFilename());
-                    } while(nread <= 0);
-
-                    this.offset += nread;
-                    if (this.offset == this.buffer.length) {
-                        char[] newbuf = new char[this.buffer.length * 2];
-                        System.arraycopy(this.buffer, 0, newbuf, 0, this.buffer.length);
-                        this.buffer = newbuf;
+            if (line != null) {
+                records.add(new SourceRecord(this.offsetKey(this.filename), this.offsetValue(this.streamOffset), this.topic, (Integer)null, (Schema)null, (Object)null, VALUE_SCHEMA, line, System.currentTimeMillis()));
+                if (records.size() >= this.batchSize) {
+                    synchronized (this) {
+                        this.wait(this.delay);
                     }
-
-                    while(true) {
-                        String line = this.extractLine();
-                        if (line != null) {
-                            log.trace("Read a line from {}", this.logFilename());
-                            if (records == null) {
-                                records = new ArrayList();
-                            }
-
-                            records.add(new SourceRecord(this.offsetKey(this.filename), this.offsetValue(this.streamOffset), this.topic, (Integer)null, (Schema)null, (Object)null, VALUE_SCHEMA, line, System.currentTimeMillis()));
-                            if (records.size() >= this.batchSize) {
-                                return records;
-                            }
-                        }
-
-                        if (line == null) {
-                            break;
-                        }
+                    return records;
+                }
+            }
+            if (records.size() > 0 && line == null)
+                return records;
+            else if (line == null) {
+               this.fileno++;
+                if(this.fileno >= this.files.length) {
+                    return null;
+                }
+                else {
+                    try {
+                        this.stream = fs.open(this.files[fileno].getPath());
+                        this.reader = new BufferedReader(new InputStreamReader(this.stream, StandardCharsets.UTF_8));
+                    } catch (IOException e) {
+                        log.error(e.getMessage());
+                        return null;
                     }
                 }
             }
-        } catch (IOException var14) {
-            return null;
         }
     }
 

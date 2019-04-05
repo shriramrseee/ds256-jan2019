@@ -95,7 +95,10 @@ public class HashTagTrends {
 			try {
 				// Hash tags;
 				for (String aH : s.split(",")[8].split(";"))
-				out.add(new Tuple2<>(aH, 1L));
+				{
+					if (!aH.equals(""))
+					    out.add(new Tuple2<>(aH, 1L));
+				}
 			} catch (Exception e) {
 				// Do nothing
 			}

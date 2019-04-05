@@ -1,11 +1,10 @@
 package in.ds256.Assignment2;
 
-import java.util.HashMap;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Pattern;
 
+import com.google.common.hash.HashFunction;
+import scala.Array;
 import scala.Tuple2;
 
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -17,6 +16,8 @@ import org.apache.spark.streaming.kafka010.LocationStrategies;
 import org.apache.spark.SparkConf;
 import org.apache.spark.streaming.api.java.*;
 import org.apache.spark.streaming.Durations;
+
+import static com.google.common.hash.Hashing.murmur3_32;
 
 public class UserCount {
 
@@ -51,8 +52,40 @@ public class UserCount {
 		*	Code goes here....
 		*/
 
+		JavaDStream<String> tweets = messages.map(ConsumerRecord::value);
+
 		// Start the computation
 		jssc.start();
 		jssc.awaitTermination();
+	}
+
+	private static Long getDistinctCount(Iterator<String> x) {
+
+		// Common
+
+        // Hash Functions
+        ArrayList<HashFunction> hf = new ArrayList<>();
+        for(int i=0; i<30; i++) {
+           hf.add(murmur3_32(12345));
+        }
+
+        // Signatures
+        ArrayList<Integer> sig = new Array
+
+		String s;
+		for (; x.hasNext(); ) {
+			s = x.next();
+			try {
+				// Hash tags;
+				for (String aH : s.split(",")[8].split(";"))
+				{
+					if (!aH.equals(""))
+						out.add(new Tuple2<>(aH, 1L));
+				}
+			} catch (Exception e) {
+				// Do nothing
+			}
+		}
+		return out.iterator();
 	}
 }

@@ -60,8 +60,6 @@ public class TweetsETL {
 
 		etl.dstream().saveAsTextFiles(output,"txt");
 
-		// etl.foreachRDD((VoidFunction2<JavaRDD<String>, Time>) (stringJavaRDD, time) -> stringJavaRDD.saveAsTextFile(output + "-" + time.toString().split(" ")[0]));
-
 		// Start the computation
 		jssc.start();
 		jssc.awaitTermination();

@@ -55,7 +55,7 @@ public class HashTagTrends {
 		JavaInputDStream<ConsumerRecord<String, String>> messages = KafkaUtils.createDirectStream(jssc,
 				LocationStrategies.PreferConsistent(), ConsumerStrategies.Subscribe(Collections.singleton(topic), kafkaParams));
 
-		/**
+		/*
 		*	Code goes here....
 		*/
 

@@ -100,6 +100,7 @@ public class TweetsETL {
                     tweet = tweet.replaceAll(" "+st, "");
                 }
                 tweet = tweet.replaceAll("[^a-zA-Z ]", "");
+                tweet = tweet.replaceAll(" {2}", " ");
                 parsed = parsed.concat(tweet + ",");
 				// Hash tags
 				JSONArray h = (JSONArray) ((JSONObject) j.get("entities")).get("hashtags");

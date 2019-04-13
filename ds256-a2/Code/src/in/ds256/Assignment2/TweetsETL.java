@@ -2,6 +2,7 @@ package in.ds256.Assignment2;
 
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.TextStyle;
 import java.util.*;
 
 import org.apache.spark.api.java.JavaRDD;
@@ -84,7 +85,7 @@ public class TweetsETL {
                 parsed = "";
                 // Time
                 parsed = parsed.concat(ZonedDateTime.parse((String) j.get("created_at"), dtf).toInstant().toEpochMilli() + ",");
-                parsed = parsed.concat(ZonedDateTime.parse((String) j.get("created_at"), dtf).getZone().getId() + ",");
+                parsed = parsed.concat(ZonedDateTime.parse((String) j.get("created_at"), dtf).getZone().getDisplayName(TextStyle.FULL, Locale.ENGLISH) + ",");
                 // Lang
                 parsed = parsed.concat(j.get("lang") + ",");
                 // ID
@@ -100,11 +101,11 @@ public class TweetsETL {
                     tweet = tweet.replaceAll(" "+st, "");
                 }
                 tweet = tweet.replaceAll("[^a-zA-Z ]", "");
-                tweet = tweet.replaceAll(" {2}", " ");
+                tweet = tweet.replaceAll(" {2,}", " ").trim();
                 parsed = parsed.concat(tweet + ",");
 				// Hash tags
 				JSONArray h = (JSONArray) ((JSONObject) j.get("entities")).get("hashtags");
-                for (Object aH : h) parsed = parsed.concat(((JSONObject) aH).get("text") + ";");
+                for (Object aH : h) parsed = parsed.concat(((JSONObject) aH).get("text").toString().trim() + ";");
                 out.add(parsed);
 			} catch (Exception e) {
 				// Do nothing

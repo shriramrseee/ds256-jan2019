@@ -120,7 +120,7 @@ public class SentimentAnalysis {
 			s = x.next();
 			try {
                 words = new HashSet<>(Arrays.asList(s.split(",")[8].split(";")));
-                words.addAll(new HashSet<>(Arrays.asList(s.split(",")[7].replaceAll(" {2}", " ").split(" "))));
+                words.addAll(new HashSet<>(Arrays.asList(s.split(",")[7].split(" "))));
 				for (int i=0; i<terms.size(); i++)
 				{
 					if (!Sets.intersection(terms.get(i), words).isEmpty()) {

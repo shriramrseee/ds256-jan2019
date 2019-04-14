@@ -3,6 +3,7 @@ package in.ds256.Assignment2;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
 
 import com.google.common.hash.HashFunction;
 import org.apache.hadoop.conf.Configuration;
@@ -33,6 +34,7 @@ import org.apache.spark.streaming.kafka010.LocationStrategies;
 import org.apache.spark.SparkConf;
 import org.apache.spark.streaming.Durations;
 import scala.Tuple2;
+import scala.Tuple3;
 
 import static com.google.common.hash.Hashing.murmur3_32;
 
@@ -75,11 +77,13 @@ public class UserCount {
 		*/
 
 		// Initialize state
-        List<Tuple2<Integer, Integer>> hashes = new ArrayList<>();
+        List<Tuple2<Integer, Tuple2<Integer, Integer>>> hashes = new ArrayList<>();
         for(int i=0; i<no_of_hashes; i++) {
-            hashes.add(new Tuple2<>(i, 0));
+            hashes.add(new Tuple2<>(i, new Tuple2<>(0, 0)));
         }
-        JavaPairRDD<Integer, Integer> hashRDD = jssc.sparkContext().parallelizePairs(hashes);
+        JavaPairRDD<Integer, Tuple2<Integer, Integer>> hashRDD = jssc.sparkContext().parallelizePairs(hashes);
+        JavaPairRDD<Integer, Tuple2<Integer, Integer>> hashWeekRDD = jssc.sparkContext().parallelizePairs(hashes);
+        JavaPairRDD<Integer, Tuple2<Integer, Integer>> hashMonthRDD = jssc.sparkContext().parallelizePairs(hashes);
 
 		// Process new batch
         JavaDStream<String> tweets = messages.map(ConsumerRecord::value);
@@ -87,25 +91,76 @@ public class UserCount {
         JavaPairDStream<Integer, Integer> batchHashes = tweets.mapPartitionsToPair((PairFlatMapFunction<Iterator<String>, Integer, Integer>) UserCount::getHash);
 
         // Update state
-        Function3<Integer, Optional<Integer>, State<Integer>, Tuple2<Integer, Integer>> mappingFunc =
+        Function3<Integer, Optional<Integer>, State<Tuple2<Integer, Integer>>, Tuple2<Integer, Tuple2<Integer, Integer>>> mappingFunc =
                 (index, hash, state) -> {
-                    int m = Math.max(hash.orElse(0), (state.exists() ? state.get() : 0));
-                    Tuple2<Integer, Integer> result = new Tuple2<>(index, m);
+                    Tuple2<Integer, Integer> m = new Tuple2<>(hash.orElse(0), state.get()._2+1);
+                    Tuple2<Integer, Tuple2<Integer, Integer>> result = new Tuple2<>(index, m);
+                    state.update(m);
+                    return result;
+                };
+        Function3<Integer, Optional<Integer>, State<Tuple2<Integer, Integer>>, Tuple2<Integer, Tuple2<Integer, Integer>>> mappingWeekFunc =
+                (index, hash, state) -> {
+                    Tuple2<Integer, Integer> m;
+                    if(state.get()._2 % 2 == 0)
+                        m = new Tuple2<>(hash.orElse(0), state.get()._2+1);
+                    else
+                        m = new Tuple2<>(Math.max(hash.orElse(0), (state.exists() ? state.get()._1 : 0)),  state.get()._2+1);
+                    Tuple2<Integer, Tuple2<Integer, Integer>> result = new Tuple2<>(index, m);
+                    state.update(m);
+                    return result;
+                };
+        Function3<Integer, Optional<Integer>, State<Tuple2<Integer, Integer>>, Tuple2<Integer, Tuple2<Integer, Integer>>> mappingMonthFunc =
+                (index, hash, state) -> {
+                    Tuple2<Integer, Integer> m;
+                    if(state.get()._2 % 3 == 0)
+                        m = new Tuple2<>(hash.orElse(0), state.get()._2+1);
+                    else
+                        m = new Tuple2<>(Math.max(hash.orElse(0), (state.exists() ? state.get()._1 : 0)),  state.get()._2+1);
+                    Tuple2<Integer, Tuple2<Integer, Integer>> result = new Tuple2<>(index, m);
                     state.update(m);
                     return result;
                 };
 
-        JavaMapWithStateDStream<Integer, Integer, Integer, Tuple2<Integer, Integer>> streamHashState = batchHashes.mapWithState(StateSpec.function(mappingFunc).initialState(hashRDD));
-
+        JavaMapWithStateDStream<Integer, Integer, Tuple2<Integer, Integer>, Tuple2<Integer, Tuple2<Integer, Integer>>> streamHashState = batchHashes.mapWithState(StateSpec.function(mappingFunc).initialState(hashRDD));
+        JavaMapWithStateDStream<Integer, Integer, Tuple2<Integer, Integer>, Tuple2<Integer, Tuple2<Integer, Integer>>> streamHashWeekState = batchHashes.mapWithState(StateSpec.function(mappingWeekFunc).initialState(hashWeekRDD));
+        JavaMapWithStateDStream<Integer, Integer, Tuple2<Integer, Integer>, Tuple2<Integer, Tuple2<Integer, Integer>>> streamHashMonthState = batchHashes.mapWithState(StateSpec.function(mappingMonthFunc).initialState(hashMonthRDD));
 
         // Compute distinct count and persist
-        streamHashState.foreachRDD((VoidFunction2<JavaRDD<Tuple2<Integer, Integer>>, Time>) (r, time) -> {
-            List<Tuple2<Integer, Integer>> values  = r.collect();
+        streamHashState.foreachRDD((VoidFunction2<JavaRDD<Tuple2<Integer, Tuple2<Integer, Integer>>>, Time>) (r, time) -> {
+            List<Tuple2<Integer, Tuple2<Integer, Integer>>> values  = r.collect();
+            if (values.size() < no_of_hashes)
+                return;
             Configuration conf = new Configuration();
-            String fpath = output+time.toString().split(" ")[0];
+            String fpath = output+"-hourly-"+time.toString().split(" ")[0];
             FileSystem fs = FileSystem.get(URI.create(fpath), conf);
             FSDataOutputStream out = fs.create(new Path(fpath));
-            out.write((computeDistinct(values) + "").getBytes(StandardCharsets.UTF_8));
+            out.write(("Hourly : " + computeDistinct(values) + "").getBytes(StandardCharsets.UTF_8));
+            out.write(("\n").getBytes(StandardCharsets.UTF_8));
+            out.close();
+        });
+
+        streamHashWeekState.foreachRDD((VoidFunction2<JavaRDD<Tuple2<Integer, Tuple2<Integer, Integer>>>, Time>) (r, time) -> {
+            List<Tuple2<Integer, Tuple2<Integer, Integer>>> values  = r.collect();
+            if(values.get(0)._2._2 % 2 != 0)
+                return;
+            Configuration conf = new Configuration();
+            String fpath = output+"-daily-"+time.toString().split(" ")[0];
+            FileSystem fs = FileSystem.get(URI.create(fpath), conf);
+            FSDataOutputStream out = fs.create(new Path(fpath));
+            out.write(("Daily : " + computeDistinct(values) + "").getBytes(StandardCharsets.UTF_8));
+            out.write(("\n").getBytes(StandardCharsets.UTF_8));
+            out.close();
+        });
+
+        streamHashMonthState.foreachRDD((VoidFunction2<JavaRDD<Tuple2<Integer, Tuple2<Integer, Integer>>>, Time>) (r, time) -> {
+            List<Tuple2<Integer, Tuple2<Integer, Integer>>> values  = r.collect();
+            if(values.get(0)._2._2 % 3 != 0)
+                return;
+            Configuration conf = new Configuration();
+            String fpath = output+"-monthly-"+time.toString().split(" ")[0];
+            FileSystem fs = FileSystem.get(URI.create(fpath), conf);
+            FSDataOutputStream out = fs.create(new Path(fpath));
+            out.write(("Monthly : " + computeDistinct(values) + "").getBytes(StandardCharsets.UTF_8));
             out.write(("\n").getBytes(StandardCharsets.UTF_8));
             out.close();
         });
@@ -156,15 +211,14 @@ public class UserCount {
         return result.iterator();
     }
 
-
-    private static Long computeDistinct(List<Tuple2<Integer, Integer>> values) {
+    private static Long computeDistinct(List<Tuple2<Integer, Tuple2<Integer, Integer>>> values) {
 
         long sum;
         Long avg[] = new Long[no_of_bins];
         for(int i=0; i<no_of_bins; i++) {
             sum = 0L;
             for(int j=0; j<bin_size; j++) {
-                sum += 1L << values.get(bin_size*i + j)._2;
+                sum += 1L << values.get(bin_size*i + j)._2._1;
             }
             avg[i] = Math.round(sum*1.0/bin_size);
         }

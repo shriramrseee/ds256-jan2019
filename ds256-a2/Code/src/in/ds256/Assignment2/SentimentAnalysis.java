@@ -119,11 +119,12 @@ public class SentimentAnalysis {
 		for (; x.hasNext(); ) {
 			s = x.next();
 			try {
-                words = new HashSet<>(Arrays.asList(s.split(",")[8].split(";")));
-                words.addAll(new HashSet<>(Arrays.asList(s.split(",")[7].split(" "))));
+				words = new HashSet<>(Arrays.asList(s.split(",")[7].split(" ")));
+                if (s.split(",").length == 9)
+                    words.addAll(new HashSet<>(Arrays.asList(s.split(",")[8].split(";"))));
 				for (int i=0; i<terms.size(); i++)
 				{
-					if (!Sets.intersection(terms.get(i), words).isEmpty()) {
+					if (!(Sets.intersection(terms.get(i), words).isEmpty())) {
 					    out[i]++;
                     }
 				}
@@ -134,7 +135,8 @@ public class SentimentAnalysis {
 
 		ArrayList<Tuple2<Integer, Long>> result = new ArrayList<>();
 		for(int i=0; i<out.length; i++) {
-		    result.add(new Tuple2<>(i, out[i]));
+			if (out[i] > 0)
+		        result.add(new Tuple2<>(i, out[i]));
         }
 		return result.iterator();
 	}

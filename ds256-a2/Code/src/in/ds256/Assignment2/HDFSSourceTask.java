@@ -107,7 +107,14 @@ public class HDFSSourceTask extends SourceTask {
             else if (line == null) {
                this.fileno++;
                 if(this.fileno >= this.files.length) {
-                    return null;
+                    this.fileno = 0;
+                    try {
+                        this.stream = fs.open(this.files[fileno].getPath());
+                        this.reader = new BufferedReader(new InputStreamReader(this.stream, StandardCharsets.UTF_8));
+                    } catch (IOException e) {
+                        log.error(e.getMessage());
+                        return null;
+                    }
                 }
                 else {
                     try {

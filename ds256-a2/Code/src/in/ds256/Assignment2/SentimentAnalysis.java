@@ -59,7 +59,7 @@ public class SentimentAnalysis {
 
 		// Create context with a 10 seconds batch interval
 		SparkConf sparkConf = new SparkConf().setAppName("UserCount");
-		JavaStreamingContext jssc = new JavaStreamingContext(sparkConf, Durations.seconds(10));
+		JavaStreamingContext jssc = new JavaStreamingContext(sparkConf, Durations.seconds(3600));
 		
 		Map<String, Object> kafkaParams = new HashMap<>();
 		kafkaParams.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, broker);

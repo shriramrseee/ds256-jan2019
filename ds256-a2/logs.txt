@@ -1,0 +1,60 @@
+
+--Application IDs
+
+--TweetsETL
+
+application_1555178415259_0032
+application_1555178415259_0038
+application_1555178415259_0040
+application_1555178415259_0041
+
+--HashTagTrends
+
+application_1555178415259_0047
+
+--UserCount
+
+application_1555178415259_0046
+application_1555178415259_0045
+application_1555178415259_0044
+application_1555178415259_0043
+
+--SentimentAnalysis
+
+application_1555178415259_0042
+
+--Kafka Commands
+
+bin/kafka-server-start.sh config/server.properties
+
+bin/kafka-topics.sh --create --bootstrap-server turing.cds.iisc.ac.in:9044 --replication-factor 1 --partitions 2 --topic shriramr-test-1
+bin/kafka-console-producer.sh --broker-list turing.cds.iisc.ac.in:9044 --topic shriramr-test
+bin/kafka-console-consumer.sh --bootstrap-server turing.cds.iisc.ac.in:9044 --topic shriramr-test --from-beginning
+bin/kafka-topics.sh --delete --bootstrap-server turing.cds.iisc.ac.in:9044 --topic shriramr-test-1
+
+bin/connect-standalone.sh config/connect-standalone.properties config/connect-hdfs-source.properties
+bin/kafka-console-consumer.sh --bootstrap-server turing.cds.iisc.ac.in:9044 --topic shriramr-test --from-beginning | wc -l
+
+rm /tmp/connect.shriramr.offsets
+
+--Spark Commands
+
+--TweetsETL
+
+spark-submit --class in.ds256.Assignment2.TweetsETL --master yarn --deploy-mode cluster --num-executors 1 --driver-memory 512m --executor-memory 8G --executor-cores 4  Assignment2-1.0-SNAPSHOT-jar-with-dependencies.jar turing.cds.iisc.ac.in:9044 shriramr-test-1 hdfs:///user/shriramr/output
+
+--HashTagTrends
+
+spark-submit --class in.ds256.Assignment2.HashTagTrends --master yarn --deploy-mode cluster --num-executors 1 --driver-memory 512m --executor-memory 8G --executor-cores 4  Assignment2-1.0-SNAPSHOT-jar-with-dependencies.jar turing.cds.iisc.ac.in:9044 shriramr-test-1 hdfs:///user/shriramr/output
+
+--UserCount
+
+spark-submit --class in.ds256.Assignment2.UserCount --master yarn --deploy-mode cluster --num-executors 1 --driver-memory 512m --executor-memory 8G --executor-cores 4  Assignment2-1.0-SNAPSHOT-jar-with-dependencies.jar turing.cds.iisc.ac.in:9044 shriramr-test-1 hdfs:///user/shriramr/output
+
+--SentimentAnalysis
+
+spark-submit --class in.ds256.Assignment2.SentimentAnalysis --master yarn --deploy-mode cluster --num-executors 1 --driver-memory 512m --executor-memory 8G --executor-cores 4  Assignment2-1.0-SNAPSHOT-jar-with-dependencies.jar turing.cds.iisc.ac.in:9044 shriramr-test-1 hdfs:///user/shriramr/output
+
+
+
+

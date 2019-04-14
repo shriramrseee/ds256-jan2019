@@ -43,7 +43,7 @@ public class HashTagTrends {
 
 		// Create context with a 10 seconds batch interval
 		SparkConf sparkConf = new SparkConf().setAppName("HashTagTrends");
-		JavaStreamingContext jssc = new JavaStreamingContext(sparkConf, Durations.seconds(10));
+		JavaStreamingContext jssc = new JavaStreamingContext(sparkConf, Durations.seconds(600));
 		
 		Map<String, Object> kafkaParams = new HashMap<>();
 		kafkaParams.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, broker);
@@ -63,7 +63,7 @@ public class HashTagTrends {
 
 		JavaPairDStream<String, Long> trending = tweets.mapPartitionsToPair((PairFlatMapFunction<Iterator<String>, String, Long>) HashTagTrends::getHashTags);
 
-		trending = trending.reduceByKeyAndWindow((i1, i2) -> i1 + i2, Durations.seconds(30), Durations.seconds(10));
+		trending = trending.reduceByKeyAndWindow((i1, i2) -> i1 + i2, Durations.seconds(1800), Durations.seconds(600));
 
 		trending.mapToPair(x -> new Tuple2<>(x._2, x._1))
 				.transformToPair((Function<JavaPairRDD<Long, String>, JavaPairRDD<Long, String>>) x -> x.sortByKey(false))

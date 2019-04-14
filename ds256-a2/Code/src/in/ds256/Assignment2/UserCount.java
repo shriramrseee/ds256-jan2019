@@ -59,7 +59,7 @@ public class UserCount {
 
 		// Create context with a 10 seconds batch interval
 		SparkConf sparkConf = new SparkConf().setAppName("UserCount");
-		JavaStreamingContext jssc = new JavaStreamingContext(sparkConf, Durations.seconds(10));
+		JavaStreamingContext jssc = new JavaStreamingContext(sparkConf, Durations.seconds(3600));
 		jssc.checkpoint(".");
 		
 		Map<String, Object> kafkaParams = new HashMap<>();
@@ -88,7 +88,7 @@ public class UserCount {
 		// Process new batch
         JavaDStream<String> tweets = messages.map(ConsumerRecord::value);
 
-        JavaPairDStream<Integer, Integer> batchHashes = tweets.mapPartitionsToPair((PairFlatMapFunction<Iterator<String>, Integer, Integer>) UserCount::getHash);
+        JavaPairDStream<Integer, Integer> batchHashes = tweets.mapPartitionsToPair((PairFlatMapFunction<Iterator<String>, Integer, Integer>) UserCount::getHash).reduceByKey(Math::max);
 
         // Update state
         Function3<Integer, Optional<Integer>, State<Tuple2<Integer, Integer>>, Tuple2<Integer, Tuple2<Integer, Integer>>> mappingFunc =
@@ -101,7 +101,7 @@ public class UserCount {
         Function3<Integer, Optional<Integer>, State<Tuple2<Integer, Integer>>, Tuple2<Integer, Tuple2<Integer, Integer>>> mappingWeekFunc =
                 (index, hash, state) -> {
                     Tuple2<Integer, Integer> m;
-                    if(state.get()._2 % 2 == 0)
+                    if(state.get()._2 % 24 == 0)
                         m = new Tuple2<>(hash.orElse(0), state.get()._2+1);
                     else
                         m = new Tuple2<>(Math.max(hash.orElse(0), (state.exists() ? state.get()._1 : 0)),  state.get()._2+1);
@@ -112,7 +112,7 @@ public class UserCount {
         Function3<Integer, Optional<Integer>, State<Tuple2<Integer, Integer>>, Tuple2<Integer, Tuple2<Integer, Integer>>> mappingMonthFunc =
                 (index, hash, state) -> {
                     Tuple2<Integer, Integer> m;
-                    if(state.get()._2 % 3 == 0)
+                    if(state.get()._2 % 168 == 0)
                         m = new Tuple2<>(hash.orElse(0), state.get()._2+1);
                     else
                         m = new Tuple2<>(Math.max(hash.orElse(0), (state.exists() ? state.get()._1 : 0)),  state.get()._2+1);
@@ -141,7 +141,7 @@ public class UserCount {
 
         streamHashWeekState.foreachRDD((VoidFunction2<JavaRDD<Tuple2<Integer, Tuple2<Integer, Integer>>>, Time>) (r, time) -> {
             List<Tuple2<Integer, Tuple2<Integer, Integer>>> values  = r.collect();
-            if(values.get(0)._2._2 % 2 != 0)
+            if(values.get(0)._2._2 % 24 != 0)
                 return;
             Configuration conf = new Configuration();
             String fpath = output+"-daily-"+time.toString().split(" ")[0];
@@ -154,13 +154,13 @@ public class UserCount {
 
         streamHashMonthState.foreachRDD((VoidFunction2<JavaRDD<Tuple2<Integer, Tuple2<Integer, Integer>>>, Time>) (r, time) -> {
             List<Tuple2<Integer, Tuple2<Integer, Integer>>> values  = r.collect();
-            if(values.get(0)._2._2 % 3 != 0)
+            if(values.get(0)._2._2 % 168 != 0)
                 return;
             Configuration conf = new Configuration();
-            String fpath = output+"-monthly-"+time.toString().split(" ")[0];
+            String fpath = output+"-weekly-"+time.toString().split(" ")[0];
             FileSystem fs = FileSystem.get(URI.create(fpath), conf);
             FSDataOutputStream out = fs.create(new Path(fpath));
-            out.write(("Monthly : " + computeDistinct(values) + "").getBytes(StandardCharsets.UTF_8));
+            out.write(("Weekly : " + computeDistinct(values) + "").getBytes(StandardCharsets.UTF_8));
             out.write(("\n").getBytes(StandardCharsets.UTF_8));
             out.close();
         });

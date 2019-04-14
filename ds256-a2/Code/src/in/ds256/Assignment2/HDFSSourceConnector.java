@@ -72,6 +72,6 @@ public class HDFSSourceConnector extends SourceConnector {
     }
 
     static {
-        CONFIG_DEF = (new ConfigDef()).define("file", Type.STRING, (Object)null, Importance.HIGH, "Source filename. If not specified, the standard input will be used").define("topic", Type.LIST, Importance.HIGH, "The topic to publish data to").define("batch.size", Type.INT, 2000, Importance.LOW, "The maximum number of records the Source task can read from file one time").define("delay", Type.INT, 10000, Importance.HIGH, "The delay between two batches");
+        CONFIG_DEF = (new ConfigDef()).define("file", Type.STRING, (Object)null, Importance.HIGH, "Source filename. If not specified, the standard input will be used").define("topic", Type.LIST, Importance.HIGH, "The topic to publish data to").define("batch.size", Type.INT, 2000, Importance.LOW, "The maximum number of records the Source task can read from file one time").define("delay", Type.INT, 1000, Importance.HIGH, "The delay between two batches");
     }
 }

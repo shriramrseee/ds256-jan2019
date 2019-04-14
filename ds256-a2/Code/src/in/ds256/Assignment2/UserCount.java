@@ -3,7 +3,6 @@ package in.ds256.Assignment2;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicLong;
 
 import com.google.common.hash.HashFunction;
 import org.apache.hadoop.conf.Configuration;
@@ -34,7 +33,6 @@ import org.apache.spark.streaming.kafka010.LocationStrategies;
 import org.apache.spark.SparkConf;
 import org.apache.spark.streaming.Durations;
 import scala.Tuple2;
-import scala.Tuple3;
 
 import static com.google.common.hash.Hashing.murmur3_32;
 

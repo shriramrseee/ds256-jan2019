@@ -1,6 +1,6 @@
 from data_load.loaders import load_fact, load_date, load_literal
 
-remote = "ws://10.24.24.2:8182/gremlin"
+remote = "ws://35.200.133.241:8182/gremlin"
 local = "ws://localhost:8182/gremlin"
 
 # Load into Cloud server

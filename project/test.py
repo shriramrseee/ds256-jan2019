@@ -1,4 +1,6 @@
 from multiprocessing import freeze_support
+import networkx as nx
+from networkx.readwrite import json_graph
 
 from gremlin_python import statics
 from gremlin_python.driver.client import Client
@@ -20,13 +22,16 @@ from gremlin_python.process.traversal import Bindings
 from gremlin_python.process.traversal import WithOptions
 
 from input_query import process_input_query
+from local_graph import get_local_graph
 
 if __name__ == '__main__':
     freeze_support()
 
-    # with open("sample_queries/vertex_search.json", "rb") as f:
-    #     query = f.read()
-    #     process_input_query(query)
+    g = get_local_graph()
+
+    with open("sample_queries/vertex_search.json", "rb") as f:
+        query = f.read()
+        process_input_query(query, g)
 
     # g = traversal().withRemote(DriverRemoteConnection('ws://35.200.188.1:8182/gremlin', 'g'))
     # print g.V("India").out().toList()
@@ -87,10 +92,10 @@ if __name__ == '__main__':
 #         # prop[i] = p[i][0].value
 
 
-from local_graph import fetch_store_local_graph, clear_local_graph
-
-clear_local_graph()
-fetch_store_local_graph('India', 1)
+# from local_graph import fetch_store_local_graph, clear_local_graph
+#
+# clear_local_graph()
+# fetch_store_local_graph('India', 1)
 
 
 

@@ -48,7 +48,7 @@ class local_edge:
         self.outV = outV
 
     def __dict__(self):
-        return {'id': self.id, 'prop': self.prop, 'inV': self.inV, 'outV': self.outV}
+        return {'prop': self.prop, 'inV': self.inV, 'outV': self.outV}
 
 
 def clear_local_graph():
@@ -100,3 +100,16 @@ def fetch_store_local_graph(source, hops=1):
     data = json_graph.node_link_data(g)
     with open(local_graph_file, 'wb') as f:
         json.dump(data, f)
+
+
+def get_local_graph():
+    """
+    Create local graph instance and return the object
+    :return:
+    """
+
+    with open(local_graph_file, "rb") as f:
+        data = json.load(f)
+        g = json_graph.node_link_graph(data)
+
+    return g

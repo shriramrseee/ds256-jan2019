@@ -4,7 +4,7 @@ import threading
 import time
 from multiprocessing import Process
 
-from query import query_server
+from query import query_remote_server, query_local_server
 
 
 class query:
@@ -40,12 +40,14 @@ class answer:
         self.result |= r
 
 
-def process_input_query(input_query, cutV=None):
+def process_input_query(input_query, local_graph, cutV=None):
     """
     Processes the given input query and returns the result
     :param input_query: JSON format
     :return: query result
     """
+
+    input_query = json.loads(input_query)
 
     q = query(input_query['type'])
 
@@ -62,7 +64,7 @@ def process_input_query(input_query, cutV=None):
 
         # Execute Local query
         local_result = answer()
-        lt = threading.Thread(target=query_server, args=(copy.deepcopy(q), 'local', local_result))
+        lt = threading.Thread(target=query_remote_server, args=(copy.deepcopy(q), 'local', local_result))
         lt.start()
         lt.join()
 
@@ -78,7 +80,7 @@ def process_input_query(input_query, cutV=None):
             for v in cutV:
                 newq = copy.deepcopy(q)
                 newq.filter['from'] = v.label
-                rt = threading.Thread(target=query_server, args=(copy.deepcopy(newq), 'remote', remote_result))
+                rt = threading.Thread(target=query_remote_server, args=(copy.deepcopy(newq), 'remote', remote_result))
                 rt.start()
                 rt.join()
                 remote_time += remote_result.time
@@ -96,7 +98,7 @@ def process_input_query(input_query, cutV=None):
                 local_result = answer()
                 newq = copy.deepcopy(q)
                 newq.filter['to'] = m.objects[0].label
-                lt = threading.Thread(target=query_server, args=(copy.deepcopy(newq), 'local', local_result))
+                lt = threading.Thread(target=query_remote_server, args=(copy.deepcopy(newq), 'local', local_result))
                 lt.start()
                 lt.join()
                 local_time += local_result.time
@@ -122,14 +124,15 @@ def process_input_query(input_query, cutV=None):
 
     else:
         start = time.time()
+
         # Execute Local query
         local_result = answer()
-        lt = threading.Thread(target=query_server, args=(copy.deepcopy(q), 'local', local_result))
+        lt = threading.Thread(target=query_local_server, args=(local_graph, copy.deepcopy(q), local_result))
         lt.start()
 
         # Execute Remote query
         remote_result = answer()
-        rt = threading.Thread(target=query_server, args=(copy.deepcopy(q), 'remote', remote_result))
+        rt = threading.Thread(target=query_remote_server, args=(copy.deepcopy(q), remote_result))
         rt.start()
 
         lt.join()
@@ -137,10 +140,14 @@ def process_input_query(input_query, cutV=None):
 
         end = time.time()
 
-        payload = [len(local_result.result), len(remote_result.result)]
+        # payload = [len(local_result.result), len(remote_result.result)]
 
-        local_result.result.union(remote_result.result)
+        print local_result.result
+        print remote_result.result
 
-        payload = payload + [len(local_result.result), local_result.time, remote_result.time]
+        print local_result.result.union(remote_result.result)
 
-        return payload
+        # payload = payload + [len(local_result.result), local_result.time, remote_result.time]
+        #
+        # return payload
+

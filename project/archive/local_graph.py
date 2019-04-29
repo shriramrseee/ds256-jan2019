@@ -19,6 +19,8 @@ from gremlin_python.process.traversal import Barrier
 from gremlin_python.process.traversal import Bindings
 from gremlin_python.process.traversal import WithOptions
 
+from config import remote_ip
+
 
 class local_vertex:
     """
@@ -66,7 +68,7 @@ def fetch_store_local_graph(id, hops=3):
     """
     Fetch and store subgraph locally
     """
-    g = traversal().withRemote(DriverRemoteConnection('ws://10.24.24.2:8182/gremlin', 'g'))
+    g = traversal().withRemote(DriverRemoteConnection('ws://' + remote_ip + ':8182/gremlin', 'g'))
 
     # Fetch remote subgraph
     subgraph = g.V(id).repeat(__.inE().subgraph('subGraph').outV()).times(hops).cap('subGraph').toList()[0]

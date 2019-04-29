@@ -28,8 +28,8 @@ if __name__ == '__main__':
     #     query = f.read()
     #     process_input_query(query)
 
-    g = traversal().withRemote(DriverRemoteConnection('ws://localhost:8182/gremlin', 'g'))
-    print g.V().label().toList()
+    # g = traversal().withRemote(DriverRemoteConnection('ws://35.200.188.1:8182/gremlin', 'g'))
+    # print g.V("India").out().toList()
 
     # with open("sample_queries/edge_search.json", "rb") as f:
     #     query = f.read()
@@ -87,10 +87,10 @@ if __name__ == '__main__':
 #         # prop[i] = p[i][0].value
 
 
-# from local_graph import fetch_store_local_graph, clear_local_graph
-#
-# clear_local_graph()
-# fetch_store_local_graph('<India>', 2)
+from local_graph import fetch_store_local_graph, clear_local_graph
+
+clear_local_graph()
+fetch_store_local_graph('India', 1)
 
 
 

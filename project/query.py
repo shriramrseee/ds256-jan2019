@@ -54,18 +54,18 @@ def query_remote_server(query, answer):
         answer.time = time.time() - st
 
     elif query.type == 'edge_search':
-        result = g.V()
+        result = g
         if query.filter['from'] is not None:
-            result = result.hasLabel(query.filter['from']).outE()
+            result = result.V(query.filter['from']).outE()
         if query.filter['to'] is not None:
-            result = result.hasLabel(query.filter['to']).inE()
+            result = result.V(query.filter['to']).inE()
         if query.filter['has_label'] is not None:
-            result = g.E().hasLabel(query.filter['has_label'])
+            result = g.E().has('label', query.filter['has_label'])
 
         # Execute query
         result = result.toSet()
         for e in result:
-            answer.union({(e.outV.label, e.label, e.inV.label)})
+            answer.union({(e.outV.id, g.E(e.id).propertyMap().toList()[0]['label'], e.inV.id)})
         # print location, answer.result, time.time() - st
         answer.time = time.time() - st
 
@@ -126,6 +126,47 @@ def query_local_server(graph, query, answer):
                 if attribute in v[1]:
                     if predicate(v[1][attribute], query.filter['has'][2]):
                         result1.add(v[0])
+            if flag:
+                result = result1.intersection(result)
+            else:
+                flag = True
+                result = result1
+            result1 = set([])
+
+        # Execute query
+        answer.union(result)
+        # print location, answer.result, time.time() - st
+        answer.time = time.time() - st
+
+    elif query.type == 'edge_search':
+        result = set([])
+        result1 = set([])
+        flag = False
+        edges = graph.edges.data()
+        if query.filter['from'] is not None:
+            for e in edges:
+                if e[0] == query.filter['from']:
+                    result1.add((e[0], e[2]['label'], e[1]))
+            if flag:
+                result = result1.intersection(result)
+            else:
+                result = result1
+                flag = True
+            result1 = set([])
+        if query.filter['to'] is not None:
+            for e in edges:
+                if e[1] == query.filter['to']:
+                    result1.add((e[0], e[2]['label'], e[1]))
+            if flag:
+                result = result1.intersection(result)
+            else:
+                flag = True
+                result = result1
+            result1 = set([])
+        if query.filter['has_label'] is not None:
+            for e in edges:
+                if e[2]['label'] == query.filter['has_label']:
+                    result1.add((e[0], e[2]['label'], e[1]))
             if flag:
                 result = result1.intersection(result)
             else:

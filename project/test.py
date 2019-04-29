@@ -29,16 +29,16 @@ if __name__ == '__main__':
 
     g = get_local_graph()
 
-    with open("sample_queries/vertex_search.json", "rb") as f:
-        query = f.read()
-        process_input_query(query, g)
+    # with open("sample_queries/vertex_search.json", "rb") as f:
+    #     query = f.read()
+    #     process_input_query(query, g)
 
     # g = traversal().withRemote(DriverRemoteConnection('ws://35.200.188.1:8182/gremlin', 'g'))
     # print g.V("India").out().toList()
 
-    # with open("sample_queries/edge_search.json", "rb") as f:
-    #     query = f.read()
-    #     process_input_query(query)
+    with open("sample_queries/edge_search.json", "rb") as f:
+        query = f.read()
+        process_input_query(query, g)
 
     # Get cut vertices
     # g = traversal().withRemote(DriverRemoteConnection('ws://localhost:8182/gremlin', 'g'))

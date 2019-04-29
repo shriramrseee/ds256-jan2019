@@ -1,8 +1,8 @@
 {
   "type": "edge_search",
   "filter": {
-    "has_label": "<exports>",
+    "has_label": null,
     "from": null,
-    "to": null
+    "to": "India"
   }
 }

@@ -145,7 +145,7 @@ def process_input_query(input_query, local_graph, cutV=None):
         print local_result.result
         print remote_result.result
 
-        print local_result.result.union(remote_result.result)
+        # print local_result.result.union(remote_result.result)
 
         # payload = payload + [len(local_result.result), local_result.time, remote_result.time]
         #

@@ -1,4 +1,5 @@
 import time
+import conf
 
 from gremlin_python import statics
 from gremlin_python.driver.client import Client
@@ -20,7 +21,7 @@ from gremlin_python.process.traversal import Bindings
 from gremlin_python.process.traversal import WithOptions
 
 
-def query_server(query, location, answer):
+def query_server(query, location, answer, cache):
     """
     Contact the Gremlin server with given query and get the query result
     :return: query result
@@ -28,7 +29,23 @@ def query_server(query, location, answer):
 
     st = time.time()
 
-    ip = {'local': 'ws://localhost:8182/gremlin', 'remote': 'ws://35.200.188.1:8182/gremlin'}
+    if location == 'remote':
+        result = cache.lookup(str(query))
+        if result != -1:
+            # Cache hit
+            if query.type == 'vertex_search':
+                answer.union(result)
+            elif query.type == 'edge_search':
+                for e in result:
+                    answer.union({(e.outV.id, e.label, e.inV.id)})
+            elif query.type == 'reachability':
+                answer.union(result)
+            elif query.type == 'path_search':
+                answer.union(result)
+            answer.time = time.time() - st
+            return
+
+    ip = {'local': conf.local_server, 'remote': conf.remote_server}
 
     g = traversal().withRemote(DriverRemoteConnection(ip[location], 'g'))
 
@@ -48,7 +65,10 @@ def query_server(query, location, answer):
             result = result.hasLabel(query.filter['to']).inE().outV()
 
         # Execute query
-        answer.union(result.id().toSet())
+        result = result.id().toSet()
+        if location == 'remote':
+            cache.add(str(query), result)
+        answer.union(result)
         # print location, answer.result, time.time() - st
         answer.time = time.time() - st
 
@@ -63,6 +83,8 @@ def query_server(query, location, answer):
 
         # Execute query
         result = result.toSet()
+        if location == 'remote':
+            cache.add(str(query), result)
         for e in result:
             answer.union({(e.outV.id, e.label, e.inV.id)})
         # print location, answer.result, time.time() - st
@@ -73,6 +95,8 @@ def query_server(query, location, answer):
         g = g.withComputer()
         result = g.V(query.filter['from']).shortestPath().with_(ShortestPath.target, __.hasId(query.filter['to'])).with_(ShortestPath.includeEdges, True).toSet()
         # print location, result, time.time() - st
+        if location == 'remote':
+            cache.add(str(query), result)
         answer.union(result)
         answer.time = time.time() - st
 
@@ -93,9 +117,10 @@ def query_server(query, location, answer):
 
         result = result.path()
 
-        print result.toSet()
-
         # Execute query
-        # answer.union(result.toSet())
+        result = result.toSet()
+        if location == 'remote':
+            cache.add(str(query), result)
+        answer.union(result)
         # print location, answer.result, time.time() - st
-        # answer.time = time.time() - st
+        answer.time = time.time() - st

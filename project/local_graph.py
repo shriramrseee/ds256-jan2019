@@ -1,4 +1,5 @@
 import json
+import conf
 
 from gremlin_python import statics
 from gremlin_python.driver.client import Client
@@ -53,7 +54,7 @@ def clear_local_graph():
     """
     Delete all vertices in local graph
     """
-    g = traversal().withRemote(DriverRemoteConnection('ws://localhost:8182/gremlin', 'g'))
+    g = traversal().withRemote(DriverRemoteConnection(conf.local_server, 'g'))
     g.V().drop().iterate()
 
 
@@ -61,7 +62,7 @@ def fetch_store_local_graph(source, hops=1):
     """
     Fetch and store subgraph locally
     """
-    g = traversal().withRemote(DriverRemoteConnection('ws://35.200.188.1:8182/gremlin', 'g'))
+    g = traversal().withRemote(DriverRemoteConnection(conf.remote_server, 'g'))
 
     # Fetch remote subgraph
     subgraph = g.V(source).repeat(__.outE().subgraph('subGraph').outV()).times(hops).cap('subGraph').toList()[0]
@@ -93,7 +94,7 @@ def fetch_store_local_graph(source, hops=1):
 
     # Persist in local Tinkergraph
 
-    g = traversal().withRemote(DriverRemoteConnection('ws://localhost:8182/gremlin', 'g'))
+    g = traversal().withRemote(DriverRemoteConnection(conf.local_server, 'g'))
 
     new_id = {}
 

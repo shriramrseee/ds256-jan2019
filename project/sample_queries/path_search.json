@@ -1,7 +1,7 @@
 {
   "type": "path_search",
   "filter": {
-    "vertices": ["Mahatma_Gandhi", "India", "Subhash_Agarwal"],
-    "edges": ["isCitizenOf", null]
+    "vertices": ["Mahatma_Gandhi", null, "Subhash_Agarwal"],
+    "edges": [null, null]
   }
 }

@@ -29,6 +29,9 @@ class query:
     def load_path_search(self, input_query):
         self.filter = input_query['filter']
 
+    def __str__(self):
+        return self.type + '_' + json.dumps(self.filter)
+
 
 class answer:
     """
@@ -43,7 +46,7 @@ class answer:
         self.result |= r
 
 
-def process_input_query(input_query, cutV=None):
+def process_input_query(input_query, cache, cutV=None):
     """
     Processes the given input query and returns the result
     :param input_query: JSON format
@@ -67,7 +70,7 @@ def process_input_query(input_query, cutV=None):
 
         # Execute Local query
         local_result = answer()
-        lt = threading.Thread(target=query_server, args=(copy.deepcopy(q), 'local', local_result))
+        lt = threading.Thread(target=query_server, args=(copy.deepcopy(q), 'local', local_result, cache))
         lt.start()
         lt.join()
 
@@ -83,7 +86,7 @@ def process_input_query(input_query, cutV=None):
             for v in cutV:
                 newq = copy.deepcopy(q)
                 newq.filter['from'] = v.label
-                rt = threading.Thread(target=query_server, args=(copy.deepcopy(newq), 'remote', remote_result))
+                rt = threading.Thread(target=query_server, args=(copy.deepcopy(newq), 'remote', remote_result, cache))
                 rt.start()
                 rt.join()
                 remote_time += remote_result.time
@@ -101,7 +104,7 @@ def process_input_query(input_query, cutV=None):
                 local_result = answer()
                 newq = copy.deepcopy(q)
                 newq.filter['to'] = m.objects[0].label
-                lt = threading.Thread(target=query_server, args=(copy.deepcopy(newq), 'local', local_result))
+                lt = threading.Thread(target=query_server, args=(copy.deepcopy(newq), 'local', local_result, cache))
                 lt.start()
                 lt.join()
                 local_time += local_result.time
@@ -114,7 +117,7 @@ def process_input_query(input_query, cutV=None):
                     print '\n'
             else:
                 # Path might be contained entirely in remote            
-                rt = threading.Thread(target=query_server, args=(copy.deepcopy(q), 'remote', remote_result))
+                rt = threading.Thread(target=query_server, args=(copy.deepcopy(q), 'remote', remote_result, cache))
                 rt.start()
                 rt.join()
                 remote_time += remote_result.time
@@ -141,27 +144,50 @@ def process_input_query(input_query, cutV=None):
 
         start = time.time()
 
-        # Execute Remote query
-        remote_result = answer()
-        rt = threading.Thread(target=query_server, args=(copy.deepcopy(q), 'remote', remote_result))
-        rt.start()
+        if len(q.filter['vertices']) <= 2:
 
-        rt.join()
+            # Execute Local query
+            local_result = answer()
+            lt = threading.Thread(target=query_server, args=(copy.deepcopy(q), 'local', local_result, cache))
+            lt.start()
 
-        end = time.time()
+            # Execute Remote query
+            remote_result = answer()
+            rt = threading.Thread(target=query_server, args=(copy.deepcopy(q), 'remote', remote_result, cache))
+            rt.start()
 
-        # print remote_result.result
+            lt.join()
+            rt.join()
+
+            print local_result.result
+            print remote_result.result
+
+            return [len(local_result.result.union(remote_result.result)), local_result.time, remote_result.time]
+
+        else:
+
+            # Execute Remote query
+            remote_result = answer()
+            rt = threading.Thread(target=query_server, args=(copy.deepcopy(q), 'remote', remote_result, cache))
+            rt.start()
+
+            rt.join()
+
+            print remote_result.result
+
+            return [len(remote_result.result), 0, remote_result.time]
 
     else:
         start = time.time()
+
         # Execute Local query
         local_result = answer()
-        lt = threading.Thread(target=query_server, args=(copy.deepcopy(q), 'local', local_result))
+        lt = threading.Thread(target=query_server, args=(copy.deepcopy(q), 'local', local_result, cache))
         lt.start()
 
         # Execute Remote query
         remote_result = answer()
-        rt = threading.Thread(target=query_server, args=(copy.deepcopy(q), 'remote', remote_result))
+        rt = threading.Thread(target=query_server, args=(copy.deepcopy(q), 'remote', remote_result, cache))
         rt.start()
 
         lt.join()
@@ -176,6 +202,6 @@ def process_input_query(input_query, cutV=None):
 
         local_result.result.union(remote_result.result)
 
-        # payload = payload + [len(local_result.result), local_result.time, remote_result.time]
+        payload = [len(local_result.result.union(remote_result.result)), local_result.time, remote_result.time]
 
-        # return payload
+        return payload

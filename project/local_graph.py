@@ -1,6 +1,4 @@
 import json
-import networkx as nx
-from networkx.readwrite import json_graph
 
 from gremlin_python import statics
 from gremlin_python.driver.client import Client
@@ -21,8 +19,6 @@ from gremlin_python.process.traversal import Barrier
 from gremlin_python.process.traversal import Bindings
 from gremlin_python.process.traversal import WithOptions
 
-from config import remote_ip, local_graph_file
-
 
 class local_vertex:
     """
@@ -42,35 +38,37 @@ class local_edge:
     Local edge class
     """
 
-    def __init__(self, prop=None, inV=None, outV=None):
+    def __init__(self, id=None, label=None, prop=None, inV=None, outV=None):
+        self.id = id
+        self.label = label
         self.prop = prop
         self.inV = inV
         self.outV = outV
 
     def __dict__(self):
-        return {'prop': self.prop, 'inV': self.inV, 'outV': self.outV}
+        return {'id': self.id, 'label': self.label, 'prop': self.prop, 'inV': self.inV, 'outV': self.outV}
 
 
 def clear_local_graph():
     """
     Delete all vertices in local graph
     """
-    with open(local_graph_file, 'wb') as f:
-        f.write('')
+    g = traversal().withRemote(DriverRemoteConnection('ws://localhost:8182/gremlin', 'g'))
+    g.V().drop().iterate()
 
 
 def fetch_store_local_graph(source, hops=1):
     """
     Fetch and store subgraph locally
     """
-    g = traversal().withRemote(DriverRemoteConnection('ws://' + remote_ip + ':8182/gremlin', 'g'))
+    g = traversal().withRemote(DriverRemoteConnection('ws://35.200.188.1:8182/gremlin', 'g'))
 
     # Fetch remote subgraph
     subgraph = g.V(source).repeat(__.outE().subgraph('subGraph').outV()).times(hops).cap('subGraph').toList()[0]
 
     # Construct vertex list
     vertices = []
-    for v in subgraph['@value']['vertices'][0:10]:
+    for v in subgraph['@value']['vertices']:
         id = v.id
         prop = {}
         p = g.V(id).propertyMap().toList()[0]
@@ -80,36 +78,37 @@ def fetch_store_local_graph(source, hops=1):
 
     # Construct edge list
     edges = []
-    for e in subgraph['@value']['edges'][0:10]:
+    for e in subgraph['@value']['edges']:
+        id = e.id
         inV = e.inV.id
         outV = e.outV.id
-        prop = {'id': e.id}
-        p = g.E(e.id).propertyMap().toList()[0]
+        label = g.E(id).label().toList()[0]
+        prop = {}
+        p = g.E(id).propertyMap().toList()[0]
         for i in p:
             prop[i] = p[i].value
-        edges.append(local_edge(prop, inV, outV))
+        edges.append(local_edge(id, label, prop, inV, outV))
 
     print len(vertices), len(edges)
 
-    # Persist in local NetworkX file
-    g = nx.Graph()
+    # Persist in local Tinkergraph
+
+    g = traversal().withRemote(DriverRemoteConnection('ws://localhost:8182/gremlin', 'g'))
+
+    new_id = {}
+
     for v in vertices:
-        g.add_node(v.id, **v.prop)
+        new_vertex = g.addV('vertex').property(T.id, v.id)
+        for i in v.prop:
+            new_vertex.property(i, v.prop[i])
+        new_id[v.id] = new_vertex.id().toList()[0]
+
     for e in edges:
-        g.add_edge(e.inV, e.outV, **e.prop)
-    data = json_graph.node_link_data(g)
-    with open(local_graph_file, 'wb') as f:
-        json.dump(data, f)
+        s = g.V(new_id[e.outV])
+        d = g.V(new_id[e.inV])
+        g.addE(e.label).from_(s).to(d).toList()
+        new_edge = g.E().hasLabel(e.label)
+        for i in e.prop:
+            new_edge.property(i, e.prop[i])
 
 
-def get_local_graph():
-    """
-    Create local graph instance and return the object
-    :return:
-    """
-
-    with open(local_graph_file, "rb") as f:
-        data = json.load(f)
-        g = json_graph.node_link_graph(data)
-
-    return g

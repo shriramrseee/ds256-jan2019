@@ -1,7 +1,7 @@
 {
   "type": "path_search",
   "filter": {
-    "from": "<India>",
-    "to": "<Barack_Obama>"
+    "vertices": ["Mahatma_Gandhi", "India", "Subhash_Agarwal"],
+    "edges": ["isCitizenOf", null]
   }
 }

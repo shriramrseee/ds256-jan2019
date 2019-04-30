@@ -1,6 +1,5 @@
+import json
 from multiprocessing import freeze_support
-import networkx as nx
-from networkx.readwrite import json_graph
 
 from gremlin_python import statics
 from gremlin_python.driver.client import Client
@@ -22,36 +21,40 @@ from gremlin_python.process.traversal import Bindings
 from gremlin_python.process.traversal import WithOptions
 
 from input_query import process_input_query
-from local_graph import get_local_graph
 
 if __name__ == '__main__':
     freeze_support()
 
-    g = get_local_graph()
-
     # with open("sample_queries/vertex_search.json", "rb") as f:
     #     query = f.read()
-    #     process_input_query(query, g)
+    #     process_input_query(json.loads(query))
 
     # g = traversal().withRemote(DriverRemoteConnection('ws://35.200.188.1:8182/gremlin', 'g'))
-    # print g.V("India").out().toList()
+    # print g.V().label().toList()
 
-    with open("sample_queries/edge_search.json", "rb") as f:
+    # with open("sample_queries/edge_search.json", "rb") as f:
+    #     query = f.read()
+    #     process_input_query(json.loads(query))
+
+    with open("sample_queries/path_search.json", "rb") as f:
         query = f.read()
-        process_input_query(query, g)
+        process_input_query(json.loads(query))
 
     # Get cut vertices
     # g = traversal().withRemote(DriverRemoteConnection('ws://localhost:8182/gremlin', 'g'))
     # cutV = []
-    # for i in g.V().hasLabel('<India>').repeat(out().simplePath()).times(1).path().toList():
+    # for i in g.V('Donald_Knuth').repeat(out().simplePath()).times(1).path().toList():
     #     cutV.append(i.objects[-1])
     #
-    # with open("sample_queries/path_search.json", "rb") as f:
+    # with open("sample_queries/reachability.json", "rb") as f:
     #     query = f.read()
-    #     process_input_query(query, cutV[1:10])
+    #     process_input_query(json.loads(query), cutV[1:10])
 
-# g = traversal().withRemote(DriverRemoteConnection('ws://10.24.24.2:8182/gremlin', 'g'))
-# g = g.withComputer()
+    # g = traversal().withRemote(DriverRemoteConnection('ws://35.200.188.1:8182/gremlin', 'g'))
+    # g = g.withComputer()
+    # print g.V('Mahatma_Gandhi').shortestPath().with_(ShortestPath.target, __.hasId('Iceland')).with_(ShortestPath.includeEdges, True).toSet()
+
+
 # result = g.V().hasLabel('<India>').shortestPath().with_(
 #     ShortestPath.target, __.hasLabel('<50_Cent>')).toList()
 # print result[0].objects[0].label
@@ -95,7 +98,7 @@ if __name__ == '__main__':
 # from local_graph import fetch_store_local_graph, clear_local_graph
 #
 # clear_local_graph()
-# fetch_store_local_graph('India', 1)
+# fetch_store_local_graph('Donald_Knuth', 1)
 
 
 
@@ -104,3 +107,5 @@ if __name__ == '__main__':
 
 
 # print g.V().hasLabel('person').has('name', P.eq('marko')).out().toSet()
+
+# "C:\Users\Beast\Documents\IISc\DS 256\ds256-jan2019\project\apache-tinkerpop-gremlin-server-3.4.1\bin\gremlin-server.bat" ..\gremlin-server.yaml

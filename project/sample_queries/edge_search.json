@@ -2,7 +2,7 @@
   "type": "edge_search",
   "filter": {
     "has_label": null,
-    "from": null,
-    "to": "India"
+    "from": "Mahatma_Gandhi",
+    "to": null
   }
 }

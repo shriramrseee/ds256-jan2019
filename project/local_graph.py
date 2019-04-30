@@ -98,7 +98,7 @@ def fetch_store_local_graph(source, hops=1):
     new_id = {}
 
     for v in vertices:
-        new_vertex = g.addV(v.id)
+        new_vertex = g.addV('vertex').property(T.id, v.id)
         for i in v.prop:
             new_vertex.property(i, v.prop[i])
         new_id[v.id] = new_vertex.id().toList()[0]

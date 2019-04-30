@@ -28,7 +28,7 @@ def query_server(query, location, answer):
 
     st = time.time()
 
-    ip = {'local': 'ws://localhost:8182/gremlin', 'remote': 'ws://10.24.24.2:8182/gremlin'}
+    ip = {'local': 'ws://localhost:8182/gremlin', 'remote': 'ws://35.200.188.1:8182/gremlin'}
 
     g = traversal().withRemote(DriverRemoteConnection(ip[location], 'g'))
 
@@ -37,7 +37,7 @@ def query_server(query, location, answer):
     if query.type == 'vertex_search':
         result = g.V()
         if query.filter['has_label'] is not None:
-            result = g.V().hasLabel(query.filter['has_label'])
+            result = g.V(query.filter['has_label'])
         if query.filter['has'] is not None:
             attribute = query.filter['has'][0]
             predicate = filter_pred[query.filter['has'][1]](query.filter['has'][2])
@@ -48,30 +48,54 @@ def query_server(query, location, answer):
             result = result.hasLabel(query.filter['to']).inE().outV()
 
         # Execute query
-        answer.union(result.label().toSet())
+        answer.union(result.id().toSet())
         # print location, answer.result, time.time() - st
         answer.time = time.time() - st
 
     elif query.type == 'edge_search':
         result = g.V()
         if query.filter['from'] is not None:
-            result = result.hasLabel(query.filter['from']).outE()
+            result = g.V(query.filter['from']).outE()
         if query.filter['to'] is not None:
-            result = result.hasLabel(query.filter['to']).inE()
+            result = g.V(query.filter['to']).inE()
         if query.filter['has_label'] is not None:
             result = g.E().hasLabel(query.filter['has_label'])
 
         # Execute query
         result = result.toSet()
         for e in result:
-            answer.union({(e.outV.label, e.label, e.inV.label)})
+            answer.union({(e.outV.id, e.label, e.inV.id)})
         # print location, answer.result, time.time() - st
         answer.time = time.time() - st
 
-    elif query.type == 'path_search':
+    elif query.type == 'reachability':
         # Execute query
         g = g.withComputer()
-        result = g.V().hasLabel(query.filter['from']).shortestPath().with_(ShortestPath.target, __.hasLabel(query.filter['to'])).with_(ShortestPath.includeEdges, True).toSet()
+        result = g.V(query.filter['from']).shortestPath().with_(ShortestPath.target, __.hasId(query.filter['to'])).with_(ShortestPath.includeEdges, True).toSet()
         # print location, result, time.time() - st
         answer.union(result)
         answer.time = time.time() - st
+
+    elif query.type == 'path_search':
+
+        result = g.V()
+
+        for i in range(len(query.filter['vertices'])):
+
+            if i > 0:
+                if query.filter['edges'][i-1] is not None:
+                    result = result.outE(query.filter['edges'][i-1]).inV()
+                else:
+                    result = result.outE().inV()
+
+            if query.filter['vertices'][i] is not None:
+                result = result.hasId(query.filter['vertices'][i])
+
+        result = result.path()
+
+        print result.toSet()
+
+        # Execute query
+        # answer.union(result.toSet())
+        # print location, answer.result, time.time() - st
+        # answer.time = time.time() - st

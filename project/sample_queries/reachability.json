@@ -1,0 +1,7 @@
+{
+  "type": "reachability",
+  "filter": {
+    "from": "Mahatma_Gandhi",
+    "to": "India"
+  }
+}

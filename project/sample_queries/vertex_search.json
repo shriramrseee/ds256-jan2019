@@ -1,7 +1,7 @@
 {
   "type": "vertex_search",
   "filter": {
-    "has_label": "<50_Cent>",
+    "has_label": "Donald_Knuth",
     "has": null,
     "from": null,
     "to": null

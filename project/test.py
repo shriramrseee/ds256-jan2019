@@ -1,3 +1,4 @@
+import json
 from multiprocessing import freeze_support
 
 from gremlin_python import statics
@@ -26,27 +27,34 @@ if __name__ == '__main__':
 
     # with open("sample_queries/vertex_search.json", "rb") as f:
     #     query = f.read()
-    #     process_input_query(query)
+    #     process_input_query(json.loads(query))
 
     # g = traversal().withRemote(DriverRemoteConnection('ws://35.200.188.1:8182/gremlin', 'g'))
     # print g.V().label().toList()
 
     # with open("sample_queries/edge_search.json", "rb") as f:
     #     query = f.read()
-    #     process_input_query(query)
+    #     process_input_query(json.loads(query))
+
+    with open("sample_queries/path_search.json", "rb") as f:
+        query = f.read()
+        process_input_query(json.loads(query))
 
     # Get cut vertices
     # g = traversal().withRemote(DriverRemoteConnection('ws://localhost:8182/gremlin', 'g'))
     # cutV = []
-    # for i in g.V().hasLabel('<India>').repeat(out().simplePath()).times(1).path().toList():
+    # for i in g.V('Donald_Knuth').repeat(out().simplePath()).times(1).path().toList():
     #     cutV.append(i.objects[-1])
     #
-    # with open("sample_queries/path_search.json", "rb") as f:
+    # with open("sample_queries/reachability.json", "rb") as f:
     #     query = f.read()
-    #     process_input_query(query, cutV[1:10])
+    #     process_input_query(json.loads(query), cutV[1:10])
 
-# g = traversal().withRemote(DriverRemoteConnection('ws://10.24.24.2:8182/gremlin', 'g'))
-# g = g.withComputer()
+    # g = traversal().withRemote(DriverRemoteConnection('ws://35.200.188.1:8182/gremlin', 'g'))
+    # g = g.withComputer()
+    # print g.V('Mahatma_Gandhi').shortestPath().with_(ShortestPath.target, __.hasId('Iceland')).with_(ShortestPath.includeEdges, True).toSet()
+
+
 # result = g.V().hasLabel('<India>').shortestPath().with_(
 #     ShortestPath.target, __.hasLabel('<50_Cent>')).toList()
 # print result[0].objects[0].label
@@ -87,10 +95,10 @@ if __name__ == '__main__':
 #         # prop[i] = p[i][0].value
 
 
-from local_graph import fetch_store_local_graph, clear_local_graph
-
-clear_local_graph()
-fetch_store_local_graph('Donald_Knuth', 1)
+# from local_graph import fetch_store_local_graph, clear_local_graph
+#
+# clear_local_graph()
+# fetch_store_local_graph('Donald_Knuth', 1)
 
 
 

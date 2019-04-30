@@ -23,6 +23,9 @@ class query:
     def load_edge_search(self, input_query):
         self.filter = input_query['filter']
 
+    def load_reachability(self, input_query):
+        self.filter = input_query['filter']
+
     def load_path_search(self, input_query):
         self.filter = input_query['filter']
 
@@ -53,10 +56,12 @@ def process_input_query(input_query, cutV=None):
         q.load_vertex_search(input_query)
     elif q.type == 'edge_search':
         q.load_edge_search(input_query)
+    elif q.type == 'reachability':
+        q.load_reachability(input_query)
     elif q.type == 'path_search':
         q.load_path_search(input_query)
 
-    if q.type == 'path_search':
+    if q.type == 'reachability':
 
         start = time.time()
 
@@ -108,7 +113,19 @@ def process_input_query(input_query, cutV=None):
                         print i.label,
                     print '\n'
             else:
-                print None
+                # Path might be contained entirely in remote            
+                rt = threading.Thread(target=query_server, args=(copy.deepcopy(q), 'remote', remote_result))
+                rt.start()
+                rt.join()
+                remote_time += remote_result.time
+                if len(remote_result.result) == 0:
+                    # No path in local or remote
+                    print None
+                else:
+                    for i in remote_result.result:
+                        for j in i.objects:
+                            print j.label,
+                        print '\n'
 
         else:  # Path is contained in local
             for i in local_result.result:
@@ -119,6 +136,21 @@ def process_input_query(input_query, cutV=None):
         payload = [local_length, remote_length, local_time, remote_time, time.time() - start]
 
         return payload
+
+    elif q.type == 'path_search':
+
+        start = time.time()
+
+        # Execute Remote query
+        remote_result = answer()
+        rt = threading.Thread(target=query_server, args=(copy.deepcopy(q), 'remote', remote_result))
+        rt.start()
+
+        rt.join()
+
+        end = time.time()
+
+        # print remote_result.result
 
     else:
         start = time.time()
@@ -137,10 +169,13 @@ def process_input_query(input_query, cutV=None):
 
         end = time.time()
 
-        payload = [len(local_result.result), len(remote_result.result)]
+        # payload = [len(local_result.result), len(remote_result.result)]
+
+        print local_result.result
+        print remote_result.result
 
         local_result.result.union(remote_result.result)
 
-        payload = payload + [len(local_result.result), local_result.time, remote_result.time]
+        # payload = payload + [len(local_result.result), local_result.time, remote_result.time]
 
-        return payload
+        # return payload

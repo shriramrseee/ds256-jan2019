@@ -1,0 +1,8 @@
+{
+  "type": "edge_search",
+  "filter": {
+    "has_label": null,
+    "from": "Mahatma_Gandhi",
+    "to": null
+  }
+}

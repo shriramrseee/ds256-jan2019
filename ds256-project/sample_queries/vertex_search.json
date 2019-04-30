@@ -1,0 +1,9 @@
+{
+  "type": "vertex_search",
+  "filter": {
+    "has_label": "Donald_Knuth",
+    "has": null,
+    "from": null,
+    "to": null
+  }
+}

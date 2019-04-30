@@ -1,0 +1,7 @@
+{
+  "type": "path_search",
+  "filter": {
+    "vertices": ["Mahatma_Gandhi", null, "Subhash_Agarwal"],
+    "edges": [null, null]
+  }
+}

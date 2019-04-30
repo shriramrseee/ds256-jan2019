@@ -25,13 +25,12 @@ class local_vertex:
     Local vertex class
     """
 
-    def __init__(self, id=None, label=None, prop=None):
+    def __init__(self, id=None, prop=None):
         self.id = id
-        self.label = label
         self.prop = prop
 
     def __dict__(self):
-        return {'id': self.id, 'label': self.label, 'prop': self.prop}
+        return {'id': self.id, 'prop': self.prop}
 
 
 class local_edge:
@@ -58,25 +57,24 @@ def clear_local_graph():
     g.V().drop().iterate()
 
 
-def fetch_store_local_graph(source, hops=3):
+def fetch_store_local_graph(source, hops=1):
     """
     Fetch and store subgraph locally
     """
-    g = traversal().withRemote(DriverRemoteConnection('ws://10.24.24.2:8182/gremlin', 'g'))
+    g = traversal().withRemote(DriverRemoteConnection('ws://35.200.188.1:8182/gremlin', 'g'))
 
     # Fetch remote subgraph
-    subgraph = g.V().hasLabel(source).repeat(__.outE().subgraph('subGraph').outV()).times(hops).cap('subGraph').toList()[0]
+    subgraph = g.V(source).repeat(__.outE().subgraph('subGraph').outV()).times(hops).cap('subGraph').toList()[0]
 
     # Construct vertex list
     vertices = []
     for v in subgraph['@value']['vertices']:
         id = v.id
-        label = g.V(id).label().toList()[0]
         prop = {}
         p = g.V(id).propertyMap().toList()[0]
         for i in p:
             prop[i] = p[i][0].value
-        vertices.append(local_vertex(id, label, prop))
+        vertices.append(local_vertex(id, prop))
 
     # Construct edge list
     edges = []
@@ -100,7 +98,7 @@ def fetch_store_local_graph(source, hops=3):
     new_id = {}
 
     for v in vertices:
-        new_vertex = g.addV(v.label)
+        new_vertex = g.addV(v.id)
         for i in v.prop:
             new_vertex.property(i, v.prop[i])
         new_id[v.id] = new_vertex.id().toList()[0]
